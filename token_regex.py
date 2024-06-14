@@ -1,7 +1,7 @@
 import re
-NUMBER = re.compile("[0-9]")
+NUMBER = re.compile("[0-9]*.?[0-9]*")
 WHITESPACE = re.compile(" |\\n|\\t")
-IDENTIFIER = re.compile("^([A-Za-z][_|\w]*)")
+IDENTIFIER = re.compile("^[A-Za-z][_|\w]*")
 BINOP = re.compile("+ | - | * | / | < | > | <= | >= | == | != | ^")
 STRINGLITERAL = re.compile("^\".*\"$")
 WHILE = re.compile("while")
@@ -23,3 +23,4 @@ COMMA = re.compile(",")
 NOT = re.compile("!")
 OPAREN = re.compile("(")
 CPAREN = re.compile(")")
+KEY_FIRST_LETTER = ['e','t','i','p','d','o','f','b','l','w']
