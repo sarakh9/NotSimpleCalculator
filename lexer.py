@@ -45,6 +45,8 @@ class Lexer:
                 pass
     
     def key_token(self):
+        key = ''
+        flag = 0
         while self.current_char != None:
             match state:
                 case 0:
@@ -54,39 +56,39 @@ class Lexer:
                         self.advance()
                     # loop
                     elif self.current_char == 'l':
-                        state = 6
+                        state = 5
                         self.advance()
                     # begin
                     elif self.current_char == 'b':
-                        state = 10
+                        state = 8
                         self.advance()
                     # end/else
                     elif self.current_char == 'e':
-                        state = 15
+                        state = 12
                         self.advance()
                     # for
                     elif self.current_char == 'f':
-                        state = 21
+                        state = 16
                         self.advance()
                     # of
                     elif self.current_char == 'o':
-                        state = 24
+                        state = 18
                         self.advance()
                     # to/then
                     elif self.current_char == 't':
-                        state = 26
+                        state = 19
                         self.advance()
                     # do
                     elif self.current_char == 'd':
-                        state = 31
+                        state = 22
                         self.advance()
                     # print
                     elif self.current_char == 'p':
-                        state = 33
+                        state = 23
                         self.advance()
                     # if
                     elif self.current_char == 'i':
-                        state = 38
+                        state = 27
                         self.advance()
                 # while
                 case 1:
@@ -103,150 +105,119 @@ class Lexer:
                         self.advance()
                 case 4:
                     if self.current_char == 'e':
-                        state = 5
+                        state = 28
                         self.advance()
-                case 5 :
-                    if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
                 # loop
+                case 5:
+                    if self.current_char == 'o':
+                        state = 6
+                        self.advance()
                 case 6:
                     if self.current_char == 'o':
                         state = 7
                         self.advance()
                 case 7:
-                    if self.current_char == 'o':
-                        state = 8
-                        self.advance()
-                case 8:
                     if self.current_char == 'p':
+                        state = 28
+                        self.advance()
+                # begin
+                case 8:
+                    if self.current_char == 'e':
                         state = 9
                         self.advance()
                 case 9:
-                    if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
-                # begin
+                    if self.current_char == 'g':
+                        state = 10
+                        self.advance()
                 case 10:
-                    if self.current_char == 'e':
+                    if self.current_char == 'i':
                         state = 11
                         self.advance()
                 case 11:
-                    if self.current_char == 'g':
-                        state = 12
+                    if self.current_char == 'n':
+                        state = 28
                         self.advance()
+                # end/else
                 case 12:
-                    if self.current_char == 'i':
+                    if self.current_char == 'n':
                         state = 13
                         self.advance()
-                case 13:
-                    if self.current_char == 'n':
+                    elif self.current_char == 'l':
                         state = 14
+                case 13:
+                    if self.current_char == 'd':
+                        state = 28
                         self.advance()
                 case 14:
-                    if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
-                # end/else
-                case 15:
-                    if self.current_char == 'n':
-                        state = 16
+                    if self.current_char == 's':
+                        state = 15
                         self.advance()
-                    elif self.current_char == 'l':
-                        state = 18
+                case 15:
+                    if self.current_char == 'e':
+                        state = 28
+                        self.advance()
+                # for
                 case 16:
-                    if self.current_char == 'd':
+                    if self.current_char == 'o':
                         state = 17
                         self.advance()
                 case 17:
-                    if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
-                case 18:
-                    if self.current_char == 's':
-                        state = 19
+                    if self.current_char == 'r':
+                        state = 28
                         self.advance()
+                # of
+                case 18:
+                    if self.current_char == 'f':
+                        state = 259
+                        self.advance()
+                # to/then
                 case 19:
-                    if self.current_char == 'e':
+                    if self.current_char == 'o':
+                        state = 28
+                        self.advance()
+                    elif self.current_char == 'h':
                         state = 20
                         self.advance()
                 case 20:
-                    if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
-                # for
+                    if self.current_char == 'e':
+                        state = 21
+                        self.advance()
                 case 21:
-                    if self.current_char == 'o':
-                        state = 22
+                    if self.current_char == 'n':
+                        state = 28
                         self.advance()
+                # do
                 case 22:
-                    if self.current_char == 'r':
-                        state = 23
+                    if self.current_char == 'o':
+                        state = 28
                         self.advance()
+                # print
                 case 23:
-                    if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
-                # of
+                    if self.current_char == 'r':
+                        state = 24
+                        self.advance()
                 case 24:
-                    if self.current_char == 'f':
+                    if self.current_char == 'i':
                         state = 25
                         self.advance()
                 case 25:
-                    if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
-                # to/then
-                case 26:
-                    if self.current_char == 'o':
-                        state = 27
+                    if self.current_char == 'n':
+                        state = 26
                         self.advance()
-                    elif self.current_char == 'h':
+                case 26:
+                    if self.current_char == 't':
                         state = 28
                         self.advance()
-                case 27:
-                    if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
-                case 28:
-                    if self.current_char == 'e':
-                        state = 29
-                        self.advance()
-                case 29:
-                    if self.current_char == 'n':
-                        state = 30
-                        self.advance()
-                case 30:
-                    if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
-                # do
-                case 31:
-                    if self.current_char == 'o':
-                        state = 32
-                        self.advance()
-                case 32:
-                    if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
-                # print
-                case 33:
-                    if self.current_char == 'r':
-                        state = 34
-                        self.advance()
-                case 34:
-                    if self.current_char == 'i':
-                        state = 35
-                        self.advance()
-                case 35:
-                    if self.current_char == 'n':
-                        state = 36
-                        self.advance()
-                case 36:
-                    if self.current_char == 't':
-                        state = 37
-                        self.advance()
-                case 37:
-                    if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
                 # if
-                case 38:
+                case 27:
                     if self.current_char == 'f':
-                        state = 39
+                        state = 28
                         self.advance()
-                case 39:
+                case 28 :
                     if re.search("[^a-zA-Z]",self.current_char):
-                        state = 40
-                case 40:
-                    pass
+                        state = 29
+                # check the key
+                case 29:
+                    for k in KEY_LIST :
+                        pass
 
