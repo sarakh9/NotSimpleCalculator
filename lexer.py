@@ -18,48 +18,35 @@ class Lexer:
     def generate_token(self):
         while self.current_char != None :
             if re.search(IDENTIFIER,self.current_char):
-                print(f"i am in identifier and cc is '{self.current_char}'")
                 yield self.id_token(0)
             elif re.search(WHITESPACE,self.current_char):
-                print(f"i am in white space and cc is '{self.current_char}'")
                 self.advance()
             elif re.search(NUMBER,self.current_char):
-                print(f"i am in number and cc is '{self.current_char}'")
                 yield self.number_token(0)
             elif re.search(BINOP,self.current_char):
-                print(f"i am in binop and cc is '{self.current_char}'")
                 yield self.binop_token(0)
             elif re.search("\"",self.current_char):
-                print(f"i am in string literal and cc is '{self.current_char}'")
                 yield self.string_token(0)
             elif re.search(ASSIGN,self.current_char):
-                print(f"i am in ASSIGN and cc is '{self.current_char}'")
                 yield self.assign_eq_token(0)
             elif re.search(COLON,self.current_char):
-                print(f"i am in COLON and cc is '{self.current_char}'")
                 self.advance()
                 yield Token(TokenType.COLON)
             elif re.search(SEMICOLON,self.current_char):
-                print(f"i am in SEMICOLON and cc is '{self.current_char}'")
                 self.advance()
                 yield Token(TokenType.SEMICOLON)
             elif re.search(COMMA,self.current_char):
-                print(f"i am in COMMA and cc is '{self.current_char}'")
                 self.advance()
                 yield Token(TokenType.COMMA)
             elif re.search(NOT,self.current_char):
-                print(f"i am in NOT and cc is '{self.current_char}'")
                 yield self.not_nq_token(0)
             elif re.search(OPAREN,self.current_char):
-                print(f"i am in OPAREN and cc is '{self.current_char}'")
                 self.advance()
                 yield Token(TokenType.OPAREN)
             elif re.search(CPAREN,self.current_char):
-                print(f"i am in CPAREN and cc is '{self.current_char}'")
                 self.advance()
                 yield Token(TokenType.CPAREN)
             else :
-                print(f"i am in else and cc is '{self.current_char}'")
                 self.advance()
                 # yield None
                 raise Exception(f"illegal character '{self.current_char}'")
