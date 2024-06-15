@@ -16,14 +16,15 @@ class Lexer:
             self.current_char = None
     def generate_token(self):
         while self.current_char != None :
-            if self.current_char.lower() in kfl:
-                yield self.key_token(0)
+            if re.search(IDENTIFIER,self.current_char):
+                print(f"i am in identifier and cc is '{self.current_char}'")
+                yield self.id_token(0)
             elif re.search(WHITESPACE,self.current_char):
+                print(f"i am in white space and cc is '{self.current_char}'")
                 self.advance()
             elif re.search(NUMBER,self.current_char):
+                print(f"i am in number and cc is '{self.current_char}'")
                 yield self.number_token(0)
-            # elif re.search(IDENTIFIER,self.current_char):
-            #     pass
             # elif re.search(BINOP,self.current_char):
             #     pass
             # elif re.search(STRINGLITERAL,self.current_char):
@@ -43,8 +44,10 @@ class Lexer:
             # elif re.search(CPAREN,self.current_char):
             #     pass
             else :
+                print("i am in else")
                 self.advance()
-                raise Exception(f"illegal character '{self.current_char}'")
+                yield None
+                # raise Exception(f"illegal character '{self.current_char}'")
     
     def key_token(self, state):
         key = ''
@@ -74,7 +77,6 @@ class Lexer:
                         self.advance()
                     # for
                     elif self.current_char == 'f':
-                        print(f"i am in state {state} and {self.current_char}")
                         key = key + self.current_char
                         state = 16
                         self.advance()
@@ -103,6 +105,9 @@ class Lexer:
                         key = key + self.current_char
                         state = 27
                         self.advance()
+                    else : 
+                        flag = 0
+                        break
                 # while
                 case 1:
                     if self.current_char == 'h':
@@ -306,11 +311,11 @@ class Lexer:
                     break
         # check the key       
         if flag == 0 :
-            return
+            return 0, key
         elif flag == 1 :
             while self.current_char != None:
                 if re.search("[^a-zA-Z \\t\\n\\r]",self.current_char):
-                    return
+                    return 0, key
                 elif re.search("[a-zA-Z]",self.current_char):
                     key = key + self.current_char
                     self.advance()
@@ -318,7 +323,8 @@ class Lexer:
                     break
             for t in KEY_LIST :
                 if re.search(t[0],key) :
-                    return Token(t[1])
+                    return Token(t[1]), key
+            return 0, key
 
     def number_token(self, state):
         numer = ''
@@ -330,8 +336,8 @@ class Lexer:
                     if re.search("[0-9]",self.current_char):
                         numer = numer + self.current_char
                         state = 1
+                        flag = 1
                         self.advance()
-                    else : state = -1
                 case 1:
                     if re.search("[0-9]",self.current_char):
                         numer = numer + self.current_char
@@ -357,12 +363,8 @@ class Lexer:
                         state = 3
                 case 3:
                     if re.search("[^0-9 \t\r\n]",self.current_char):
-                        flag = 0
                         break
                     flag = 1
-                    break
-                case -1:
-                    flag = 0
                     break
         # check the number       
         if flag == 0 :
@@ -373,6 +375,67 @@ class Lexer:
             else:
                 return Token(TokenType.NUMBER,int(numer))
             
-            
+    def id_token(self, state):
+        word = ''
+        key = 0
+        key,word = self.key_token(state)
+        w = iter(word)
+        try:
+            char = next(w)
+        except StopIteration:
+            char = None
+        if key != None and key != 0:
+            return key
+        else:
+            id = ''
+            flag = 0
+            while char != None:
+                match state:
+                    case 0:
+                        if re.search("[a-zA-Z]", char):
+                            id = id + char
+                            try:
+                                char = next(w)
+                            except StopIteration:
+                                char = None
+                            state = 1
+                            flag = 1
+                        else: 
+                            flag = 0
+                    case 1:
+                        if re.search("[a-zA-Z]|[0-9]|_", char):
+                            id = id + char
+                            try:
+                                char = next(w)
+                            except StopIteration:
+                                char = None
+                            state = 1
+                            flag = 1
+                        else: state = 2
+                    case 2:
+                        flag = 1
+            while self.current_char != None:
+                match state:
+                    case 0:
+                        if re.search("[a-zA-Z]", self.current_char):
+                            id = id + self.current_char
+                            self.advance()
+                            state = 1
+                            flag = 1
+                        else: 
+                            flag = 0
+                    case 1:
+                        if re.search("[a-zA-Z]|[0-9]|_", self.current_char):
+                            id = id + self.current_char
+                            self.advance()
+                            state = 1
+                            flag = 1
+                        else: state = 2
+                    case 2:
+                        flag = 1
+            if flag == 0 :
+                return
+            elif flag == 1:
+                return Token(TokenType.IDENTIFIER, id)
          
 
