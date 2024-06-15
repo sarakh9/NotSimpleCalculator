@@ -1,4 +1,5 @@
 import re
+from tokens import TokenType
 NUMBER = re.compile("[0-9]*.?[0-9]*")
 WHITESPACE = re.compile(" |\\n|\\t")
 IDENTIFIER = re.compile("^[A-Za-z][_|\w]*")
@@ -24,4 +25,6 @@ NOT = re.compile("!")
 OPAREN = re.compile("(")
 CPAREN = re.compile(")")
 KEY_FIRST_LETTER = ['e','t','i','p','d','o','f','b','l','w']
-KEY_LIST = [WHILE, LOOP, BEGIN, END, FOR, OF, TO, DO, PRINT, IF, THEN, ELSE]
+KEY_LIST = [(WHILE,TokenType.WHILE), (LOOP,TokenType.LOOP), (BEGIN,TokenType.BEGIN),
+            (END,TokenType.END), (FOR,TokenType.FOR), (OF,TokenType.OF), (TO,TokenType.TO),
+             (DO,TokenType.DO), (PRINT,TokenType.PRINT), (IF,TokenType.IF), (THEN,TokenType.THEN), (ELSE,TokenType.ELSE)]
