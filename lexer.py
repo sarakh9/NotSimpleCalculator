@@ -18,7 +18,7 @@ class Lexer:
     def generate_token(self):
         while self.current_char != None :
             if self.current_char.lower() in kfl:
-                pass
+                yield self.key_token()
             elif re.search(WHITESPACE,self.current_char):
                 pass
             elif re.search(NUMBER,self.current_char):
@@ -43,6 +43,8 @@ class Lexer:
                 pass
             elif re.search(CPAREN,self.current_char):
                 pass
+            else :
+                raise Exception(f"illegal character '{self.current_char}'")
     
     def key_token(self):
         key = ''
