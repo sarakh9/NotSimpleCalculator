@@ -14,6 +14,7 @@ class Lexer:
             self.current_char = next(self.lexim)
         except StopIteration:
             self.current_char = None
+    
     def generate_token(self):
         while self.current_char != None :
             if re.search(IDENTIFIER,self.current_char):
@@ -25,29 +26,43 @@ class Lexer:
             elif re.search(NUMBER,self.current_char):
                 print(f"i am in number and cc is '{self.current_char}'")
                 yield self.number_token(0)
-            # elif re.search(BINOP,self.current_char):
-            #     pass
-            # elif re.search(STRINGLITERAL,self.current_char):
-            #     pass
-            # elif re.search(ASSIGN,self.current_char):
-            #     pass
-            # elif re.search(COLON,self.current_char):
-            #     pass
-            # elif re.search(SEMICOLON,self.current_char):
-            #     pass
-            # elif re.search(COMMA,self.current_char):
-            #     pass
-            # elif re.search(NOT,self.current_char):
-            #     pass
-            # elif re.search(OPAREN,self.current_char):
-            #     pass
-            # elif re.search(CPAREN,self.current_char):
-            #     pass
-            else :
-                print("i am in else")
+            elif re.search(BINOP,self.current_char):
+                print(f"i am in binop and cc is '{self.current_char}'")
+                yield self.binop_token(0)
+            elif re.search("\"",self.current_char):
+                print(f"i am in string literal and cc is '{self.current_char}'")
+                yield self.string_token(0)
+            elif re.search(ASSIGN,self.current_char):
+                print(f"i am in ASSIGN and cc is '{self.current_char}'")
+                yield self.assign_eq_token(0)
+            elif re.search(COLON,self.current_char):
+                print(f"i am in COLON and cc is '{self.current_char}'")
                 self.advance()
-                yield None
-                # raise Exception(f"illegal character '{self.current_char}'")
+                yield Token(TokenType.COLON)
+            elif re.search(SEMICOLON,self.current_char):
+                print(f"i am in SEMICOLON and cc is '{self.current_char}'")
+                self.advance()
+                yield Token(TokenType.SEMICOLON)
+            elif re.search(COMMA,self.current_char):
+                print(f"i am in COMMA and cc is '{self.current_char}'")
+                self.advance()
+                yield Token(TokenType.COMMA)
+            elif re.search(NOT,self.current_char):
+                print(f"i am in NOT and cc is '{self.current_char}'")
+                yield self.not_nq_token(0)
+            elif re.search(OPAREN,self.current_char):
+                print(f"i am in OPAREN and cc is '{self.current_char}'")
+                self.advance()
+                yield Token(TokenType.OPAREN)
+            elif re.search(CPAREN,self.current_char):
+                print(f"i am in CPAREN and cc is '{self.current_char}'")
+                self.advance()
+                yield Token(TokenType.CPAREN)
+            else :
+                print(f"i am in else and cc is '{self.current_char}'")
+                self.advance()
+                # yield None
+                raise Exception(f"illegal character '{self.current_char}'")
     
     def key_token(self, state):
         key = ''
@@ -438,4 +453,119 @@ class Lexer:
             elif flag == 1:
                 return Token(TokenType.IDENTIFIER, id)
          
+    def binop_token(self, state):
+        op = ''
+        flag = 0
+        while self.current_char != None:
+            match state:
+                case 0:
+                    if re.search("[+]|-|[*]|/|\^", self.current_char):
+                        op = op + self.current_char
+                        self.advance()
+                        flag = 1
+                        state = 2
+                    elif re.search("<|>", self.current_char):
+                        op = op + self.current_char
+                        self.advance()
+                        flag = 1
+                        state = 1
+                    elif re.search("=|!", self.current_char):
+                        op = op + self.current_char
+                        self.advance()
+                        flag = 0
+                        state = 1
+                    else :
+                        flag = 0
+                        break
+                case 1:
+                    if re.search("=", self.current_char):
+                        op = op + self.current_char
+                        flag = 1
+                        self.advance()
+                        state = 2
+                    elif re.search("[^=]", self.current_char):
+                        break
+                case 2:
+                    flag = 1
+                    break
+        if flag == 0:
+            return
+        elif flag == 1:
+            return Token(TokenType.BINOP, op)
 
+    def string_token(self, state):
+        flag = 0
+        while self.current_char != None:
+            match state:
+                case 0:
+                    if re.search("\"", self.current_char):
+                        self.advance()
+                        state = 1
+                case 1:
+                    if re.search("\"", self.current_char):
+                        flag = 1
+                        state = 2
+                        self.advance()    
+                    else:
+                        self.advance()  
+                case 2:
+                    flag = 1
+                    break 
+        if flag == 0:
+            return
+        elif flag == 1:
+            return Token(TokenType.STRINGLITERAL)
+
+    def assign_eq_token(self, state):
+        flag = 0
+        while self.current_char != None:
+            match state:
+                case 0:
+                    if re.search(ASSIGN, self.current_char):
+                        flag = 1
+                        state = 1
+                        self.advance()
+                case 1:
+                    if re.search(ASSIGN, self.current_char):
+                        flag = 2
+                        state = 2
+                        self.advance()
+                    else:
+                        state = 3
+                case 2 :
+                    state = 3
+                case 3:
+                    break
+        if flag == 0:
+            return
+        elif flag == 1:
+            return Token(TokenType.ASSIGN)
+        elif flag == 2:
+            return Token(TokenType.BINOP, "==")
+
+    def not_nq_token(self, state):
+        flag = 0
+        while self.current_char != None:
+            match state:
+                case 0:
+                    if re.search(NOT, self.current_char):
+                        flag = 1
+                        state = 1
+                        self.advance()
+                case 1:
+                    if re.search(ASSIGN, self.current_char):
+                        flag = 2
+                        state = 2
+                        self.advance()
+                    else:
+                        state = 3
+                case 2 :
+                    state = 3
+                case 3:
+                    break
+        if flag == 0:
+            return
+        elif flag == 1:
+            return Token(TokenType.NOT)
+        elif flag == 2:
+            return Token(TokenType.BINOP, "!=")
