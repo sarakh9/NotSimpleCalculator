@@ -4,52 +4,57 @@ from token_regex import KEY_FIRST_LETTER as kfl
 from token_regex import *
 
 class Lexer:
-    state = 0
     def __init__(self, lexim):
         self.lexim = iter(lexim)
         self.advance()
 
     # iterates to next char
-    def advace(self):
+    def advance(self):
         try:
             self.current_char = next(self.lexim)
         except StopIteration:
             self.current_char = None
     def generate_token(self):
         while self.current_char != None :
+            print(f"generate token -> kfl -> lower cc '{self.current_char.lower()}'")
             if self.current_char.lower() in kfl:
-                yield self.key_token()
-            elif re.search(WHITESPACE,self.current_char):
-                pass
-            elif re.search(NUMBER,self.current_char):
-                pass
-            elif re.search(IDENTIFIER,self.current_char):
-                pass
-            elif re.search(BINOP,self.current_char):
-                pass
-            elif re.search(STRINGLITERAL,self.current_char):
-                pass
-            elif re.search(ASSIGN,self.current_char):
-                pass
-            elif re.search(COLON,self.current_char):
-                pass
-            elif re.search(SEMICOLON,self.current_char):
-                pass
-            elif re.search(COMMA,self.current_char):
-                pass
-            elif re.search(NOT,self.current_char):
-                pass
-            elif re.search(OPAREN,self.current_char):
-                pass
-            elif re.search(CPAREN,self.current_char):
-                pass
+                print("i am in the if kfl")
+                yield self.key_token(0)
+            # elif self.current_char.lower() not in kfl: return
+            # elif re.search(WHITESPACE,self.current_char):
+            #     pass
+            # elif re.search(NUMBER,self.current_char):
+            #     pass
+            # elif re.search(IDENTIFIER,self.current_char):
+            #     pass
+            # elif re.search(BINOP,self.current_char):
+            #     pass
+            # elif re.search(STRINGLITERAL,self.current_char):
+            #     pass
+            # elif re.search(ASSIGN,self.current_char):
+            #     pass
+            # elif re.search(COLON,self.current_char):
+            #     pass
+            # elif re.search(SEMICOLON,self.current_char):
+            #     pass
+            # elif re.search(COMMA,self.current_char):
+            #     pass
+            # elif re.search(NOT,self.current_char):
+            #     pass
+            # elif re.search(OPAREN,self.current_char):
+            #     pass
+            # elif re.search(CPAREN,self.current_char):
+            #     pass
             else :
+                self.advance()
                 raise Exception(f"illegal character '{self.current_char}'")
     
-    def key_token(self):
+    def key_token(self, state):
+        print("i am in key token")
         key = ''
         flag = 0
         while self.current_char != None:
+            print("i am in while cc")
             match state:
                 case 0:
                     # while
@@ -74,6 +79,7 @@ class Lexer:
                         self.advance()
                     # for
                     elif self.current_char == 'f':
+                        print(f"i am in state {state} and {self.current_char}")
                         key = key + self.current_char
                         state = 16
                         self.advance()
@@ -108,58 +114,72 @@ class Lexer:
                         key = key + self.current_char
                         state = 2
                         self.advance()
+                    else : state = -1
                 case 2:
                     if self.current_char == 'i':
                         key = key + self.current_char
                         state = 3
                         self.advance()
+                    else : state = -1
                 case 3:
                     if self.current_char == 'l':
                         key = key + self.current_char
                         state = 4
                         self.advance()
+                    else : state = -1
                 case 4:
                     if self.current_char == 'e':
                         key = key + self.current_char
                         state = 28
+                        flag = 1
                         self.advance()
+                    else : state = -1
                 # loop
                 case 5:
                     if self.current_char == 'o':
                         key = key + self.current_char
                         state = 6
                         self.advance()
+                    else : state = -1
                 case 6:
                     if self.current_char == 'o':
                         key = key + self.current_char
                         state = 7
                         self.advance()
+                    else : state = -1
                 case 7:
                     if self.current_char == 'p':
                         key = key + self.current_char
                         state = 28
+                        flag = 1
                         self.advance()
+                    else : state = -1
                 # begin
                 case 8:
                     if self.current_char == 'e':
                         key = key + self.current_char
                         state = 9
                         self.advance()
+                    else : state = -1
                 case 9:
                     if self.current_char == 'g':
                         key = key + self.current_char
                         state = 10
                         self.advance()
+                    else : state = -1
                 case 10:
                     if self.current_char == 'i':
                         key = key + self.current_char
                         state = 11
                         self.advance()
+                    else : state = -1
                 case 11:
                     if self.current_char == 'n':
                         key = key + self.current_char
                         state = 28
+                        flag = 1
                         self.advance()
+                    else : state = -1
                 # end/else
                 case 12:
                     if self.current_char == 'n':
@@ -169,111 +189,144 @@ class Lexer:
                     elif self.current_char == 'l':
                         key = key + self.current_char
                         state = 14
-                        self.advace()
+                        self.advance()
+                    else : state = -1
                 case 13:
                     if self.current_char == 'd':
                         key = key + self.current_char
                         state = 28
+                        flag = 1
                         self.advance()
+                    else : state = -1
                 case 14:
                     if self.current_char == 's':
                         key = key + self.current_char
                         state = 15
                         self.advance()
+                    else : state = -1
                 case 15:
                     if self.current_char == 'e':
                         key = key + self.current_char
                         state = 28
+                        flag = 1
                         self.advance()
+                    else : state = -1
                 # for
                 case 16:
                     if self.current_char == 'o':
+                        print(f"i am in state {state} and {self.current_char}")
                         key = key + self.current_char
                         state = 17
                         self.advance()
+                    else : state = -1
                 case 17:
+                    print(f"i am in state {state} and {self.current_char}")
                     if self.current_char == 'r':
                         key = key + self.current_char
                         state = 28
+                        flag = 1
                         self.advance()
+                    else : state = -1
                 # of
                 case 18:
                     if self.current_char == 'f':
                         key = key + self.current_char
-                        state = 259
+                        state = 28
+                        flag = 1
                         self.advance()
+                    else : state = -1
                 # to/then
                 case 19:
                     if self.current_char == 'o':
                         key = key + self.current_char
                         state = 28
+                        flag = 1
                         self.advance()
                     elif self.current_char == 'h':
                         key = key + self.current_char
                         state = 20
                         self.advance()
+                    else : state = -1
                 case 20:
                     if self.current_char == 'e':
                         key = key + self.current_char
                         state = 21
                         self.advance()
+                    else : state = -1
                 case 21:
                     if self.current_char == 'n':
                         key = key + self.current_char
                         state = 28
+                        flag = 1
                         self.advance()
+                    else : state = -1
                 # do
                 case 22 :
                     if self.current_char == 'o':
                         key = key + self.current_char
                         state = 28
+                        flag = 1
                         self.advance()
+                    else : state = -1
                 # print
                 case 23:
                     if self.current_char == 'r':
                         key = key + self.current_char
                         state = 24
                         self.advance()
+                    else : state = -1
                 case 24:
                     if self.current_char == 'i':
                         key = key + self.current_char
                         state = 25
                         self.advance()
+                    else : state = -1
                 case 25:
                     if self.current_char == 'n':
                         key = key + self.current_char
                         state = 26
                         self.advance()
+                    else : state = -1
                 case 26:
                     if self.current_char == 't':
                         key = key + self.current_char
                         state = 28
+                        flag = 1
                         self.advance()
+                    else : state = -1
                 # if
                 case 27:
                     if self.current_char == 'f':
                         key = key + self.current_char
                         state = 28
+                        flag = 1
                         self.advance()
+                    else : state = -1
                 case 28 :
+                    print(f"i am in state {state}")
                     if re.search("[^a-zA-Z \\t\\n\\r]",self.current_char):
+                        print("state 28 flag 0")
                         flag = 0
                         break
+                    print("state 28 flag 1")
                     flag = 1
                     break
-                case _:
-                    flag = 0  
+                case -1:
+                    print("case default flag 0")
+                    flag = 0
+                    # self.advance() 
                     break
         # check the key       
         if flag == 0 :
+            print("flag is 0 out of match case")
             return
         elif flag == 1 :
             while self.current_char != None:
                 if re.search("[a-zA-Z]",self.current_char):
                     key = key + self.current_char
-                    self.advace()
+                    self.advance()
                 elif re.search("[ \\t\\n\\r]",self.current_char): 
-                        self.advace()
+                        self.advance()
                 else :
                     return
             for t in KEY_LIST :
