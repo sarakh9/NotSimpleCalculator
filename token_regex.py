@@ -24,3 +24,4 @@ NOT = re.compile("!")
 OPAREN = re.compile("(")
 CPAREN = re.compile(")")
 KEY_FIRST_LETTER = ['e','t','i','p','d','o','f','b','l','w']
+KEY_LIST = [WHILE, LOOP, BEGIN, END, FOR, OF, TO, DO, PRINT, IF, THEN, ELSE]
