@@ -16,15 +16,12 @@ class Lexer:
             self.current_char = None
     def generate_token(self):
         while self.current_char != None :
-            print(f"generate token -> kfl -> lower cc '{self.current_char.lower()}'")
             if self.current_char.lower() in kfl:
-                print("i am in the if kfl")
                 yield self.key_token(0)
-            # elif self.current_char.lower() not in kfl: return
-            # elif re.search(WHITESPACE,self.current_char):
-            #     pass
-            # elif re.search(NUMBER,self.current_char):
-            #     pass
+            elif re.search(WHITESPACE,self.current_char):
+                self.advance()
+            elif re.search(NUMBER,self.current_char):
+                yield self.number_token(0)
             # elif re.search(IDENTIFIER,self.current_char):
             #     pass
             # elif re.search(BINOP,self.current_char):
@@ -50,11 +47,9 @@ class Lexer:
                 raise Exception(f"illegal character '{self.current_char}'")
     
     def key_token(self, state):
-        print("i am in key token")
         key = ''
         flag = 0
         while self.current_char != None:
-            print("i am in while cc")
             match state:
                 case 0:
                     # while
@@ -214,13 +209,11 @@ class Lexer:
                 # for
                 case 16:
                     if self.current_char == 'o':
-                        print(f"i am in state {state} and {self.current_char}")
                         key = key + self.current_char
                         state = 17
                         self.advance()
                     else : state = -1
                 case 17:
-                    print(f"i am in state {state} and {self.current_char}")
                     if self.current_char == 'r':
                         key = key + self.current_char
                         state = 28
@@ -303,35 +296,83 @@ class Lexer:
                         self.advance()
                     else : state = -1
                 case 28 :
-                    print(f"i am in state {state}")
                     if re.search("[^a-zA-Z \\t\\n\\r]",self.current_char):
-                        print("state 28 flag 0")
                         flag = 0
                         break
-                    print("state 28 flag 1")
                     flag = 1
                     break
                 case -1:
-                    print("case default flag 0")
                     flag = 0
-                    # self.advance() 
                     break
         # check the key       
         if flag == 0 :
-            print("flag is 0 out of match case")
             return
         elif flag == 1 :
             while self.current_char != None:
-                if re.search("[a-zA-Z]",self.current_char):
+                if re.search("[^a-zA-Z \\t\\n\\r]",self.current_char):
+                    return
+                elif re.search("[a-zA-Z]",self.current_char):
                     key = key + self.current_char
                     self.advance()
-                elif re.search("[ \\t\\n\\r]",self.current_char): 
-                        self.advance()
-                else :
-                    return
+                elif re.search(WHITESPACE,self.current_char):
+                    break
             for t in KEY_LIST :
                 if re.search(t[0],key) :
                     return Token(t[1])
 
+    def number_token(self, state):
+        numer = ''
+        flag = 0
+        dc_point = 0
+        while self.current_char != None:
+            match state:
+                case 0:
+                    if re.search("[0-9]",self.current_char):
+                        numer = numer + self.current_char
+                        state = 1
+                        self.advance()
+                    else : state = -1
+                case 1:
+                    if re.search("[0-9]",self.current_char):
+                        numer = numer + self.current_char
+                        state = 1
+                        self.advance()
+                        flag = 1
+                    elif self.current_char == '.':
+                        numer = numer + self.current_char
+                        state = 2
+                        self.advance()
+                        flag = 0
+                        dc_point = 1
+                    elif re.search("[^0-9]",self.current_char):
+                        state = 3
+                        flag = 1
+                case 2:
+                    if re.search("[0-9]",self.current_char):
+                        numer = numer + self.current_char
+                        state = 2
+                        self.advance()
+                        flag = 1
+                    elif re.search("[^0-9]",self.current_char):
+                        state = 3
+                case 3:
+                    if re.search("[^0-9 \t\r\n]",self.current_char):
+                        flag = 0
+                        break
+                    flag = 1
+                    break
+                case -1:
+                    flag = 0
+                    break
+        # check the number       
+        if flag == 0 :
+            return
+        elif flag == 1 :
+            if dc_point:
+                return Token(TokenType.NUMBER,float(numer))
+            else:
+                return Token(TokenType.NUMBER,int(numer))
+            
+            
          
 
