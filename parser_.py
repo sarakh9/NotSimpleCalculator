@@ -5,13 +5,14 @@ class ParseResult():
     def __init__(self) -> None:
         self.error = None
         self.node = None
+        self.az = None
     
     def register(self, result):
         if isinstance(result, ParseResult):
             if result.error: self.error = result.error
             return result.node
 
-    def succes(self, node):
+    def succes(self, node,):
         self.node = node
         return self
 
@@ -30,6 +31,9 @@ class Parser:
         self.advance()
         self.pos.line = 0
         self.token_index = 0
+        self.e = 0
+        self.f = 0
+        self.t = 0
     
     def advance(self):
         try:
@@ -51,6 +55,15 @@ class Parser:
         if tok.type == TokenType.NUMBER:
             res.register(self.advance())
             return res.succes(NumberNode(tok))
+        elif tok.type == TokenType.OPAREN:
+            res.register(self.advance())
+            expr = res.register(self.expr())
+            if res.error: return res
+            if self.current_token.type == TokenType.CPAREN:
+                res.register(self.advance())
+                return res.succes(expr)
+            else:
+                return res.fail(InvalidSyntaxError(self.pos,"expected cparen"))
         else:
             return res.fail(InvalidSyntaxError(self.pos, "expected int or float."))
         
@@ -58,8 +71,7 @@ class Parser:
     def term(self):
         res = ParseResult()
         left = res.register(self.factor())
-        if res.error: 
-            return res
+        if res.error: return res
         while self.current_token.type == TokenType.BINOP and self.current_token.value == "*" or self.current_token.value == "/":
             op_tok = self.current_token
             res.register(self.advance())
