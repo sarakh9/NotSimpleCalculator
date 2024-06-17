@@ -2,9 +2,12 @@ import re
 from tokens import Token, TokenType
 from token_regex import KEY_FIRST_LETTER as kfl
 from token_regex import *
+from errors import IllegalCharacterError, Position
+
 
 class Lexer:
-    def __init__(self, lexim):
+    def __init__(self,file_name, lexim):
+        self.pos = Position(file_name, -1, '')
         self.lexim = iter(lexim)
         self.advance()
 
@@ -16,40 +19,48 @@ class Lexer:
             self.current_char = None
     
     def generate_token(self):
+        tokens=[]
+        self.pos.line = 0
         while self.current_char != None :
             if re.search(IDENTIFIER,self.current_char):
-                yield self.id_token(0)
+                tokens.append(self.id_token(0))
             elif re.search(WHITESPACE,self.current_char):
+                if re.search("\\n",self.current_char):
+                    self.pos.line = self.pos.line + 1
+                    self.pos.line_context = ''
                 self.advance()
             elif re.search(NUMBER,self.current_char):
-                yield self.number_token(0)
+                tokens.append(self.number_token(0))
             elif re.search(BINOP,self.current_char):
-                yield self.binop_token(0)
+                tokens.append(self.binop_token(0))
             elif re.search("\"",self.current_char):
-                yield self.string_token(0)
+                tokens.append(self.string_token(0))
             elif re.search(ASSIGN,self.current_char):
-                yield self.assign_eq_token(0)
+                tokens.append(self.assign_eq_token(0))
             elif re.search(COLON,self.current_char):
                 self.advance()
-                yield Token(TokenType.COLON)
+                tokens.append(Token(TokenType.COLON))
             elif re.search(SEMICOLON,self.current_char):
                 self.advance()
-                yield Token(TokenType.SEMICOLON)
+                tokens.append(Token(TokenType.SEMICOLON))
             elif re.search(COMMA,self.current_char):
                 self.advance()
-                yield Token(TokenType.COMMA)
+                tokens.append(Token(TokenType.COMMA))
             elif re.search(NOT,self.current_char):
-                yield self.not_nq_token(0)
+                tokens.append(self.not_nq_token(0))
             elif re.search(OPAREN,self.current_char):
                 self.advance()
-                yield Token(TokenType.OPAREN)
+                tokens.append(Token(TokenType.OPAREN))
             elif re.search(CPAREN,self.current_char):
                 self.advance()
-                yield Token(TokenType.CPAREN)
+                tokens.append(Token(TokenType.CPAREN))
             else :
-                self.advance()
-                # yield None
-                raise Exception(f"illegal character '{self.current_char}'")
+                error_char = self.current_char
+                while self.current_char != None and re.search("[^\\n]",self.current_char):
+                    self.pos.line_context = self.pos.line_context + self.current_char
+                    self.advance()
+                return [] , IllegalCharacterError(self.pos, error_char)
+        return tokens, None
     
     def key_token(self, state):
         key = ''
@@ -323,31 +334,32 @@ class Lexer:
                     self.advance()
                 elif re.search(WHITESPACE,self.current_char):
                     break
+            self.pos.line_context = self.pos.line_context + key
             for t in KEY_LIST :
                 if re.search(t[0],key) :
                     return Token(t[1]), key
             return 0, key
 
     def number_token(self, state):
-        numer = ''
+        number = ''
         flag = 0
         dc_point = 0
         while self.current_char != None:
             match state:
                 case 0:
                     if re.search("[0-9]",self.current_char):
-                        numer = numer + self.current_char
+                        number = number + self.current_char
                         state = 1
                         flag = 1
                         self.advance()
                 case 1:
                     if re.search("[0-9]",self.current_char):
-                        numer = numer + self.current_char
+                        number = number + self.current_char
                         state = 1
                         self.advance()
                         flag = 1
                     elif self.current_char == '.':
-                        numer = numer + self.current_char
+                        number = number + self.current_char
                         state = 2
                         self.advance()
                         flag = 0
@@ -357,7 +369,7 @@ class Lexer:
                         flag = 1
                 case 2:
                     if re.search("[0-9]",self.current_char):
-                        numer = numer + self.current_char
+                        number = number + self.current_char
                         state = 2
                         self.advance()
                         flag = 1
@@ -370,12 +382,14 @@ class Lexer:
                     break
         # check the number       
         if flag == 0 :
+            self.pos.line_context = self.pos.line_context + number
             return
         elif flag == 1 :
             if dc_point:
-                return Token(TokenType.NUMBER,float(numer))
+                self.pos.line_context = self.pos.line_context + number
+                return Token(TokenType.NUMBER,float(number))
             else:
-                return Token(TokenType.NUMBER,int(numer))
+                return Token(TokenType.NUMBER,int(number))
             
     def id_token(self, state):
         word = ''
@@ -438,6 +452,7 @@ class Lexer:
             if flag == 0 :
                 return
             elif flag == 1:
+                self.pos.line_context = self.pos.line_context + id
                 return Token(TokenType.IDENTIFIER, id)
          
     def binop_token(self, state):
@@ -478,6 +493,7 @@ class Lexer:
         if flag == 0:
             return
         elif flag == 1:
+            self.pos.line_context = self.pos.line_context + op
             return Token(TokenType.BINOP, op)
 
     def string_token(self, state):
@@ -486,14 +502,17 @@ class Lexer:
             match state:
                 case 0:
                     if re.search("\"", self.current_char):
+                        self.pos.line_context = self.pos.line_context + self.current_char
                         self.advance()
                         state = 1
                 case 1:
                     if re.search("\"", self.current_char):
+                        self.pos.line_context = self.pos.line_context + self.current_char
                         flag = 1
                         state = 2
                         self.advance()    
                     else:
+                        self.pos.line_context = self.pos.line_context + self.current_char
                         self.advance()  
                 case 2:
                     flag = 1
@@ -526,8 +545,10 @@ class Lexer:
         if flag == 0:
             return
         elif flag == 1:
+            self.pos.line_context = self.pos.line_context + "="
             return Token(TokenType.ASSIGN)
         elif flag == 2:
+            self.pos.line_context = self.pos.line_context + "=="
             return Token(TokenType.BINOP, "==")
 
     def not_nq_token(self, state):
@@ -553,6 +574,8 @@ class Lexer:
         if flag == 0:
             return
         elif flag == 1:
+            self.pos.line_context = self.pos.line_context + "!"
             return Token(TokenType.NOT)
         elif flag == 2:
+            self.pos.line_context = self.pos.line_context + "!="
             return Token(TokenType.BINOP, "!=")
