@@ -11,6 +11,10 @@ class IllegalCharacterError(Error):
     def __init__(self ,position, detail):
         super().__init__("EllegalCharacterError", position, detail)
 
+class InvalidSyntaxError(Error):
+    def __init__(self ,position, detail):
+        super().__init__("InvalidSyntaxError", position, detail)
+
 class Position:
     def __init__(self, file_name, line, line_context):
         self.file_name = file_name
