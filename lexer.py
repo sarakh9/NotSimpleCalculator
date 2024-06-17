@@ -60,6 +60,7 @@ class Lexer:
                     self.pos.line_context = self.pos.line_context + self.current_char
                     self.advance()
                 return [] , IllegalCharacterError(self.pos, error_char)
+        tokens.append(Token(TokenType.EOF))
         return tokens, None
     
     def key_token(self, state):
