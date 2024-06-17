@@ -3,6 +3,7 @@
 # plus i am learning how to create interpreter!
 
 from lexer import Lexer, IllegalCharacterError
+from parser_ import Parser
 
 while True:
     try:
@@ -11,9 +12,12 @@ while True:
         print("EOFError")
         break
     lexer = Lexer("testing.sk",text)
-    token, error = lexer.generate_token()
-    if error:
-        print(error.as_string())
+    tokens, error = lexer.generate_token()
+    parser = Parser("testing.sk",tokens)
+    tree = parser.parse()
+    if error or tree.error:
+        print(tree.error.as_string())
         break
     else:
-        print(list(token))
+        print(list(tokens))
+        print(tree.node)
