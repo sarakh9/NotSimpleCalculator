@@ -42,7 +42,7 @@ class Parser:
     def parse(self):
         tree = self.expr()
         if not tree.error and self.current_token.type != TokenType.EOF:
-            return tree.fail(InvalidSyntaxError(self.pos, "BAD!"))
+            return tree.fail(InvalidSyntaxError(self.pos, "expected binary operation"))
         return tree
 
     def factor(self):
