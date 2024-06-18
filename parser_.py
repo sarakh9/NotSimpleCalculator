@@ -6,7 +6,6 @@ class ParseResult():
     def __init__(self) -> None:
         self.error = None
         self.node = None
-        self.az = None
     
     def register(self, result):
         if isinstance(result, ParseResult):
@@ -28,13 +27,9 @@ class Parser:
         self.tokens = tokens
         self.token_index = -1
         self.pos = Position(self.file_name, -1, '')
-        self.tree = ''
         self.advance()
         self.pos.line = 0
         self.token_index = 0
-        self.e = 0
-        self.f = 0
-        self.t = 0
     
     def advance(self):
         try:

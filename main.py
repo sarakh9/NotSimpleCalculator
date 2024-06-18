@@ -2,7 +2,7 @@
 
 from lexer import Lexer, IllegalCharacterError
 from parser_ import Parser
-
+from interpreter import Intrpreter
 while True:
     try:
         text = input("input: ")
@@ -19,3 +19,6 @@ while True:
     else:
         print(list(tokens))
         print(tree.node)
+        print(type(tree.node).__name__)
+        interpreter = Intrpreter()
+        res = interpreter.visit(tree.node)
