@@ -1,7 +1,6 @@
 from tokens import TokenType
 from nodes import NumberNode, BinopNode
 from errors import Position, InvalidSyntaxError
-
 class ParseResult():
     def __init__(self) -> None:
         self.error = None

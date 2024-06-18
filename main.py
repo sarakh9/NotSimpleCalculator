@@ -19,6 +19,6 @@ while True:
     else:
         print(list(tokens))
         print(tree.node)
-        print(type(tree.node).__name__)
         interpreter = Intrpreter()
         res = interpreter.visit(tree.node)
+        print(res.value)
