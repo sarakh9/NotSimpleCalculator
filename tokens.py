@@ -26,6 +26,7 @@ class TokenType(Enum):
     NOT           = 20
     OPAREN        = 21
     CPAREN        = 22
+    EOF           = 23
 
 @dataclass
 class Token:

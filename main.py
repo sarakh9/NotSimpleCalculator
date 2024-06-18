@@ -1,9 +1,8 @@
-# Simple Math Interpreter
-# This is my first project that i am practicing typing and git at the same time.
-# plus i am learning how to create interpreter!
+# Testin and Running Interpreter
 
 from lexer import Lexer, IllegalCharacterError
-
+from parser_ import Parser
+from interpreter import Intrpreter
 while True:
     try:
         text = input("input: ")
@@ -11,9 +10,15 @@ while True:
         print("EOFError")
         break
     lexer = Lexer("testing.sk",text)
-    token, error = lexer.generate_token()
-    if error:
-        print(error.as_string())
+    tokens, error = lexer.generate_token()
+    parser = Parser("testing.sk",tokens)
+    tree = parser.parse()
+    if error or tree.error:
+        print(tree.error.as_string())
         break
     else:
-        print(list(token))
+        print(list(tokens))
+        print(tree.node)
+        print(type(tree.node).__name__)
+        interpreter = Intrpreter()
+        res = interpreter.visit(tree.node)
