@@ -31,12 +31,21 @@ class Intrpreter:
         raise Exception(f"No method visit_{type(node).__name__} found!")
     
     def visit_NumberNode(self, node):
-        print(f"found number node {node.token.value}")
+        return Calculate(node.token.value)
     
     def visit_BinopNode(self, node):
-        print(f"found binop node {node.op.value}")
-        self.visit(node.left_child)
-        self.visit(node.right_chield)
+        left = self.visit(node.left_child)
+        right = self.visit(node.right_chield)
+        match node.op.value:
+            case '+':
+                result =  left.add_to(right)
+            case '-':
+                result = left.sub_by(right)
+            case '*':
+                result = left.mult_by(right)
+            case '/':
+                result = left.div_by(right)
+        return result
     
     
         
