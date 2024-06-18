@@ -4,7 +4,9 @@ from token_regex import KEY_FIRST_LETTER as kfl
 from token_regex import *
 from errors import IllegalCharacterError, Position
 
-
+################################################################################################################
+# LEXER
+################################################################################################################
 class Lexer:
     def __init__(self,file_name, lexim):
         self.pos = Position(file_name, -1, '')
@@ -22,6 +24,7 @@ class Lexer:
         tokens=[]
         self.pos.line = 0
         while self.current_char != None :
+            # State diagram
             if re.search(IDENTIFIER,self.current_char):
                 tokens.append(self.id_token(0))
             elif re.search(WHITESPACE,self.current_char):
@@ -55,6 +58,7 @@ class Lexer:
                 self.advance()
                 tokens.append(Token(TokenType.CPAREN))
             else :
+                # keep the hole line where the error occurred
                 error_char = self.current_char
                 while self.current_char != None and re.search("[^\\n]",self.current_char):
                     self.pos.line_context = self.pos.line_context + self.current_char
@@ -62,7 +66,8 @@ class Lexer:
                 return [] , IllegalCharacterError(self.pos, error_char)
         tokens.append(Token(TokenType.EOF))
         return tokens, None
-    
+
+    # this methode creates token for key words and gets called in id_token() method 
     def key_token(self, state):
         key = ''
         flag = 0
@@ -341,6 +346,7 @@ class Lexer:
                     return Token(t[1]), key
             return 0, key
 
+    # this methode creates token for number constants
     def number_token(self, state):
         number = ''
         flag = 0
@@ -391,7 +397,8 @@ class Lexer:
                 return Token(TokenType.NUMBER,float(number))
             else:
                 return Token(TokenType.NUMBER,int(number))
-            
+    
+    # this methode creates token for identifier
     def id_token(self, state):
         word = ''
         key = 0
@@ -455,7 +462,8 @@ class Lexer:
             elif flag == 1:
                 self.pos.line_context = self.pos.line_context + id
                 return Token(TokenType.IDENTIFIER, id)
-         
+    
+    # this methode creates token for binary operators except == and !=
     def binop_token(self, state):
         op = ''
         flag = 0
@@ -497,6 +505,7 @@ class Lexer:
             self.pos.line_context = self.pos.line_context + op
             return Token(TokenType.BINOP, op)
 
+    # this methode creates token for string constants
     def string_token(self, state):
         flag = 0
         while self.current_char != None:
@@ -523,6 +532,7 @@ class Lexer:
         elif flag == 1:
             return Token(TokenType.STRINGLITERAL)
 
+    # this methode creates token for = and ==
     def assign_eq_token(self, state):
         flag = 0
         while self.current_char != None:
@@ -552,6 +562,7 @@ class Lexer:
             self.pos.line_context = self.pos.line_context + "=="
             return Token(TokenType.BINOP, "==")
 
+    # this methode creates token for ! and !=
     def not_nq_token(self, state):
         flag = 0
         while self.current_char != None:
