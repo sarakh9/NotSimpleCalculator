@@ -38,11 +38,16 @@ class Calculate:
     def mult_by(self, operand):
         if isinstance(operand, Calculate):
             return Calculate(self.value * operand.value, self.pos), None
+    def pow_by(self, operand):
+        if isinstance(operand, Calculate):
+            return Calculate(self.value ** operand.value, self.pos), None
     def div_by(self, operand):
         if isinstance(operand, Calculate):
             if operand.value == 0:
                 return None, RunTimeError(self.pos,"Division by zero")
             return Calculate(self.value / operand.value, self.pos), None
+    def __repr__(self):
+        return str(self.value)
 
 class Intrpreter:
     def __init__(self, file_name):
@@ -76,6 +81,8 @@ class Intrpreter:
                 result, error = left.mult_by(right)
             case '/':
                 result, error = left.div_by(right)
+            case '^':
+                result, error = left.pow_by(right)
         if error: 
             return rtr.fail(error)
         return rtr.succes(result)
