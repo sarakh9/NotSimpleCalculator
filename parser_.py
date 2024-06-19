@@ -44,7 +44,7 @@ class Parser:
             return tree.fail(InvalidSyntaxError(self.pos, "expected binary operation"))
         return tree
 
-    def factor(self):
+    def power(self):
         res = ParseResult()
         tok = self.current_token
         if tok.type == TokenType.NUMBER:
@@ -61,6 +61,18 @@ class Parser:
                 return res.fail(InvalidSyntaxError(self.pos,"expected cparen"))
         else:
             return res.fail(InvalidSyntaxError(self.pos, "expected int or float."))
+
+    def factor(self):
+        res = ParseResult()
+        left = res.register(self.power())
+        if res.error: return res
+        while self.current_token.type == TokenType.BINOP and self.current_token.value == "^":
+            op_tok = self.current_token
+            res.register(self.advance())
+            right = res.register(self.factor())
+            if res.error: return res
+            left = BinopNode(op_tok, left, right)
+        return res.succes(left)
         
 
     def term(self):
