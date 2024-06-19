@@ -330,11 +330,11 @@ class Lexer:
                     break
         # check the key       
         if flag == 0 :
-            return 0, key
+            return None, key
         elif flag == 1 :
             while self.current_char != None:
                 if re.search("[^a-zA-Z \\t\\n\\r]",self.current_char):
-                    return 0, key
+                    return None, key
                 elif re.search("[a-zA-Z]",self.current_char):
                     key = key + self.current_char
                     self.advance()
@@ -344,7 +344,7 @@ class Lexer:
             for t in KEY_LIST :
                 if re.search(t[0],key) :
                     return Token(t[1]), key
-            return 0, key
+            return None, key
 
     # this methode creates token for number constants
     def number_token(self, state):
@@ -401,7 +401,7 @@ class Lexer:
     # this methode creates token for identifier
     def id_token(self, state):
         word = ''
-        key = 0
+        key = ''
         key,word = self.key_token(state)
         w = iter(word)
         try:
@@ -424,7 +424,7 @@ class Lexer:
                                 char = None
                             state = 1
                             flag = 1
-                        else: 
+                        else:
                             flag = 0
                     case 1:
                         if re.search("[a-zA-Z]|[0-9]|_", char):
@@ -435,10 +435,11 @@ class Lexer:
                                 char = None
                             state = 1
                             flag = 1
-                        else: state = 2
+                        else: 
+                            state = 2
                     case 2:
                         flag = 1
-            while self.current_char != None:
+            while self.current_char != None and not re.search(WHITESPACE, self.current_char):
                 match state:
                     case 0:
                         if re.search("[a-zA-Z]", self.current_char):
@@ -551,6 +552,7 @@ class Lexer:
                         state = 3
                 case 2 :
                     state = 3
+                    self.advance()
                 case 3:
                     break
         if flag == 0:
