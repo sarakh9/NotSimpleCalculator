@@ -3,6 +3,15 @@
 from lexer import Lexer, IllegalCharacterError
 from parser_ import Parser
 from interpreter import Intrpreter
+
+def treee(tree):
+    if type(tree).__name__ == "NumberNode":
+        return tree.token.value
+    elif type(tree).__name__ == "BinopNode":
+        res = f"[{treee(tree.left_child)}<-({tree.op.value})->{treee(tree.right_child)}]"
+        print(res)
+        return res
+
 while True:
     try:
         text = input("input: ")
@@ -11,14 +20,27 @@ while True:
         break
     lexer = Lexer("testing.sk",text)
     tokens, error = lexer.generate_token()
-    parser = Parser("testing.sk",tokens)
-    tree = parser.parse()
-    if error or tree.error:
+    
+    
+    if error:
+        print(error.as_string())
+        break
+    else:
+        print("lexer succes!")
+        print(list(tokens))
+        parser = Parser("testing.sk",tokens)
+        tree = parser.parse()
+    if tree.error:
         print(tree.error.as_string())
         break
     else:
-        print(list(tokens))
+        print("parser succes!")
         print(tree.node)
-        interpreter = Intrpreter()
+        interpreter = Intrpreter("testing.sk")
         res = interpreter.visit(tree.node)
-        print(res.value)
+    if res.error:
+        print(res.error.as_string())
+        break
+    else:
+        print("run succes!")
+        print(f"result: {res.value.value}")

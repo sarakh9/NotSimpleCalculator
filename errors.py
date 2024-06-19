@@ -26,6 +26,15 @@ class InvalidSyntaxError(Error):
     def __init__(self ,position, detail):
         super().__init__("InvalidSyntaxError", position, detail)
 
+
+################################################################################################################
+# RUN TIME ERROR
+################################################################################################################
+
+class RunTimeError(Error):
+    def __init__(self ,position, detail):
+        super().__init__("RunTimeError", position, detail)
+
 ################################################################################################################
 # POSITION: keeps track of where the error occurred
 ################################################################################################################

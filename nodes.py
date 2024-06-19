@@ -12,10 +12,10 @@ class NumberNode:
 
 # BINARY OPERATORS
 class BinopNode:
-    def __init__(self, token, left_child, right_chield):
+    def __init__(self, token, left_child, right_child):
         self.op = token
         self.left_child = left_child
-        self.right_chield = right_chield
+        self.right_child = right_child
     
     def __repr__(self):
-        return f"({self.left_child}, {self.op}, {self.right_chield})"
+        return f"({self.left_child}, {self.op}, {self.right_child})"
