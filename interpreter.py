@@ -1,11 +1,14 @@
 import math
-from nodes import NumberNode, BinopNode
+from nodes import NumberNode, BinopNode, AssignNode
 from errors import RunTimeError, Position
+from symbol_table import SymbolTable
 # from main import treee
 ################################################################################################################
 # Interpreter
 ################################################################################################################
 
+global_symbol_table = SymbolTable()
+global_symbol_table.set("null", 0)
 class RunTimeResult():
     def __init__(self) -> None:
         self.error = None
@@ -53,6 +56,7 @@ class Intrpreter:
     def __init__(self, file_name):
         self.file_name = file_name
         self.pos = Position(self.file_name, 0, '')
+        self.symbol_table = SymbolTable()
 
     def visit(self, node):
         method_name = f'visit_{type(node).__name__}'
@@ -86,6 +90,21 @@ class Intrpreter:
         if error: 
             return rtr.fail(error)
         return rtr.succes(result)
+    
+    def visit_IdNode(self, node):
+        rtr = RunTimeResult()
+        value = self.symbol_table.get(node.token.value)
+        if value is None:
+            return rtr.fail(RunTimeError(node.token.pos, f"'{node.token.value}' is not defined"))
+        return rtr.succes(value)
+    
+    def visit_AssignNode(self, node):
+        rtr = RunTimeResult()
+        value = rtr.register(self.visit(node.right_child))
+        if rtr.error: return rtr
+        self.symbol_table.set(node.left_child.token.value, value)
+        return rtr.succes(value)
+    
     # gives me the parse tree
     def treee(self, tree):
         child = ""

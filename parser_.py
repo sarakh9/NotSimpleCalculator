@@ -1,5 +1,5 @@
 from tokens import TokenType
-from nodes import NumberNode, BinopNode
+from nodes import NumberNode, BinopNode, IdNode, AssignNode
 from errors import Position, InvalidSyntaxError
 class ParseResult():
     def __init__(self) -> None:
@@ -39,7 +39,7 @@ class Parser:
             return None
     
     def parse(self):
-        tree = self.expr()
+        tree = self.stmt()
         if not tree.error and self.current_token.type != TokenType.EOF:
             return tree.fail(InvalidSyntaxError(self.pos, "expected binary operation"))
         return tree
@@ -98,4 +98,38 @@ class Parser:
             if res.error: return res
             left = BinopNode(op_tok, left, right)
         return res.succes(left)
+    
+    def id(self):
+        res = ParseResult()
+        tok = self.current_token
+        if tok.type == TokenType.IDENTIFIER:
+            res.register(self.advance())
+            return res.succes(IdNode(tok))
+        else:
+            return res.fail(InvalidSyntaxError(self.pos, "invalid variable name"))
+    
+    def stmt(self):
+        res = ParseResult()
+        if self.current_token.type == TokenType.IDENTIFIER:
+            left = res.register(self.id())
+            if res.error: return res
+            if self.current_token.type == TokenType.ASSIGN:
+                tok = self.current_token
+                res.register(self.advance())
+                right = res.register(self.expr())
+                if res.error: return res
+                if self.current_token.type == TokenType.SEMICOLON:
+                    res.register(self.advance())
+                    return res.succes(AssignNode(tok, left, right))
+                else:
+                    return res.fail(InvalidSyntaxError(self.pos, "expected ';' after assignment"))
+            else:
+                return res.fail(InvalidSyntaxError(self.pos, "expected assign operator '='"))
+        elif self.current_token.type == TokenType.ASSIGN:
+            return res.fail(InvalidSyntaxError(self.pos, "expected variable name"))
+        else :
+            left = res.register(self.expr())
+            return res.succes(left)
+
+
 

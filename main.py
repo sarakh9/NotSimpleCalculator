@@ -4,6 +4,13 @@ from lexer import Lexer, IllegalCharacterError
 from parser_ import Parser
 from interpreter import Intrpreter
 
+from symbol_table import SymbolTable
+
+def print_symbol_table(symbol_table):
+    print("Symbol Table:")
+    for name, value in symbol_table.symbols.items():
+        print(f"{name}: {value}")
+
 def treee(tree):
     if type(tree).__name__ == "NumberNode":
         return tree.token.value
@@ -19,7 +26,9 @@ while True:
         print("EOFError")
         break
     lexer = Lexer("testing.sk",text)
+    print("lexer done!")
     tokens, error = lexer.generate_token()
+    print("lexer generate!")
     
     
     if error:
@@ -44,3 +53,4 @@ while True:
     else:
         print("run succes!")
         print(f"result: {res.value.value}")
+        print_symbol_table(interpreter.symbol_table)
