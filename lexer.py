@@ -413,7 +413,7 @@ class Lexer:
         else:
             id = ''
             flag = 0
-            while char != None:
+            while char != None and not re.search(WHITESPACE, char):
                 match state:
                     case 0:
                         if re.search("[a-zA-Z]", char):
@@ -426,6 +426,7 @@ class Lexer:
                             flag = 1
                         else:
                             flag = 0
+                            break
                     case 1:
                         if re.search("[a-zA-Z]|[0-9]|_", char):
                             id = id + char
@@ -447,8 +448,9 @@ class Lexer:
                             self.advance()
                             state = 1
                             flag = 1
-                        else: 
+                        else:
                             flag = 0
+                            break
                     case 1:
                         if re.search("[a-zA-Z]|[0-9]|_", self.current_char):
                             id = id + self.current_char
@@ -458,6 +460,7 @@ class Lexer:
                         else: state = 2
                     case 2:
                         flag = 1
+                        break
             if flag == 0 :
                 return
             elif flag == 1:
@@ -509,6 +512,7 @@ class Lexer:
     # this methode creates token for string constants
     def string_token(self, state):
         flag = 0
+        str = ""
         while self.current_char != None:
             match state:
                 case 0:
@@ -523,6 +527,7 @@ class Lexer:
                         state = 2
                         self.advance()    
                     else:
+                        str = str + self.current_char
                         self.pos.line_context = self.pos.line_context + self.current_char
                         self.advance()  
                 case 2:
@@ -531,7 +536,7 @@ class Lexer:
         if flag == 0:
             return
         elif flag == 1:
-            return Token(TokenType.STRINGLITERAL)
+            return Token(TokenType.STRINGLITERAL, str)
 
     # this methode creates token for = and ==
     def assign_eq_token(self, state):

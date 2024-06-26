@@ -1,6 +1,5 @@
 import math
 from tokens import TokenType
-from nodes import NumberNode, BinopNode, AssignNode, UnaryopNode, IdNode
 from errors import RunTimeError, Position
 from symbol_table import SymbolTable
 # from main import treee
@@ -71,7 +70,7 @@ class Calculate:
     def __repr__(self):
         return str(self.value)
 
-class Intrpreter:
+class Interpreter:
     def __init__(self, file_name):
         self.file_name = file_name
         self.pos = Position(self.file_name, 0, '')
@@ -145,6 +144,88 @@ class Intrpreter:
         if rtr.error: return rtr
         self.symbol_table.set(node.left_child.token.value, value)
         return rtr.succes(value)
+    
+    def visit_IfNode(self, node):
+        rtr = RunTimeResult()
+        condition = rtr.register(self.visit(node.condition))
+        if rtr.error: return rtr
+        if condition.value:
+            result =  rtr.register(self.visit(node.true_body))
+        elif node.false_body:
+            result =  rtr.register(self.visit(node.false_body))
+        elif not (condition.value and node.false_body):
+            return False
+        else :
+            return rtr.fail(RunTimeError(self.pos, f" if statement is not correct"))
+        return rtr.succes(result)
+
+    def visit_WhileNode(self, node):
+        rtr = RunTimeResult()
+        while rtr.register(self.visit(node.condition)):
+            result = rtr.register(self.visit(node.body))
+            if rtr.error : return rtr
+            if result: return rtr.succes(result)
+        return rtr.fail(RunTimeError(self.pos, f" while statement is not correct"))
+
+    def visit_ForNode(self, node):
+        rtr = RunTimeResult()
+        start_value = rtr.register(self.visit(node.start_value))
+        if rtr.error : return rtr
+        end_value = rtr.register(self.visit(node.end_value))
+        if rtr.error : return rtr
+        for i in range(start_value.value, end_value.value + 1):
+            self.symbol_table.set(node.var_name.token.value, Calculate(i, self.pos))
+            result = rtr.register(self.visit(node.body))
+            if rtr.error : return rtr
+        return rtr.succes(result)
+
+    def visit_LoopNode(self, node):
+        rtr = RunTimeResult()
+        loop_count =rtr.register(self.visit(node.loop_count))
+        if rtr.error : return rtr
+        for i in range(1, loop_count.value + 1):
+            self.symbol_table[node.var_name.value] = Calculate(i, node.var_name.token.pos)
+            result = rtr.register(self.visit(node.body))
+            if rtr.error : return rtr
+            if result: return rtr.succes(result)
+        return rtr.fail(RunTimeError(self.pos, f" loop statement is not correct"))
+
+    def visit_PrintNode(self, node):
+        rtr = RunTimeResult()
+        
+        if node.value and node.identifier:
+            identifier_value = self.symbol_table.get(node.identifier.token.value)
+            if identifier_value:
+                print(f"{node.value} {identifier_value.value}")
+                return None
+            else:
+                print(f"{node.value} undefined")
+                return None
+        elif node.identifier:
+            identifier_value = self.symbol_table.get(node.identifier.token.value)
+            if identifier_value:
+                print(identifier_value.value)
+                return None
+            else:
+                # print("undefined")
+                return None
+        return None
+    
+    def visit_StringNode(self, node):
+        rtr = RunTimeResult()
+    
+    def visit_StatementsNode(self, node):
+        rtr = RunTimeResult()
+        for statement in node.statements:
+            result = rtr.register(self.visit(statement))
+            if rtr.error: return rtr
+        return rtr.succes(result)
+    
+    def visit_ProgramNode(self, node):
+        rtr = RunTimeResult()
+        result = rtr.register(self.visit(node.value))
+        if rtr.error: return rtr
+        return result
     
     # gives me the parse tree
     def treee(self, tree):
