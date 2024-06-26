@@ -1,5 +1,5 @@
 from tokens import TokenType
-from nodes import NumberNode, BinopNode, IdNode, AssignNode
+from nodes import NumberNode, BinopNode, IdNode, AssignNode, UnaryopNode
 from errors import Position, InvalidSyntaxError
 class ParseResult():
     def __init__(self) -> None:
@@ -79,7 +79,7 @@ class Parser:
         res = ParseResult()
         left = res.register(self.factor())
         if res.error: return res
-        while self.current_token.type == TokenType.BINOP and self.current_token.value == "*" or self.current_token.value == "/":
+        while self.current_token.type == TokenType.BINOP and (self.current_token.value == "*" or self.current_token.value == "/"):
             op_tok = self.current_token
             res.register(self.advance())
             right = res.register(self.factor())
@@ -91,7 +91,7 @@ class Parser:
         res = ParseResult()
         left = res.register(self.term())
         if res.error: return res
-        while self.current_token.type == TokenType.BINOP and self.current_token.value == "+" or self.current_token.value == "-":
+        while self.current_token.type == TokenType.BINOP and (self.current_token.value == "+" or self.current_token.value == "-"):
             op_tok = self.current_token
             res.register(self.advance())
             right = res.register(self.term())
@@ -108,6 +108,26 @@ class Parser:
         else:
             return res.fail(InvalidSyntaxError(self.pos, "invalid variable name"))
     
+    def comparison(self):
+        res = ParseResult()
+        valid_op = ["<", ">", "<=", ">=", "==", "!="]
+        if self.current_token == '!':
+            op_tok = self.current_token
+            res.register(self.advance())
+            left = res.register(self.comparison())
+            if res.error: return res
+            return res.succes(UnaryopNode(op_tok, left))
+        left = res.register(self.expr())
+        if res.error: return res
+        while self.current_token.value in valid_op:
+            op_tok = self.current_token
+            res.register(self.advance())
+            right = res.register(self.expr())
+            if res.error: return res
+            left = BinopNode(op_tok, left, right)
+        return res.succes(left)
+                    
+
     def stmt(self):
         res = ParseResult()
         if self.current_token.type == TokenType.IDENTIFIER:
@@ -116,7 +136,7 @@ class Parser:
             if self.current_token.type == TokenType.ASSIGN:
                 tok = self.current_token
                 res.register(self.advance())
-                right = res.register(self.expr())
+                right = res.register(self.comparison())
                 if res.error: return res
                 if self.current_token.type == TokenType.SEMICOLON:
                     res.register(self.advance())
@@ -128,8 +148,13 @@ class Parser:
         elif self.current_token.type == TokenType.ASSIGN:
             return res.fail(InvalidSyntaxError(self.pos, "expected variable name"))
         else :
-            left = res.register(self.expr())
-            return res.succes(left)
+            left = res.register(self.comparison())
+            if res.error: return res
+            if self.current_token.type == TokenType.SEMICOLON:
+                res.register(self.advance())
+                return res.success(left)
+            else:
+                return res.fail(InvalidSyntaxError(self.pos, "expected ';'"))
 
 
 

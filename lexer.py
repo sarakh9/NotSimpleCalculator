@@ -552,7 +552,6 @@ class Lexer:
                         state = 3
                 case 2 :
                     state = 3
-                    self.advance()
                 case 3:
                     break
         if flag == 0:

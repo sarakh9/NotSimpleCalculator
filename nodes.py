@@ -20,6 +20,14 @@ class BinopNode:
     def __repr__(self):
         return f"({self.left_child}, {self.op}, {self.right_child})"
 
+class UnaryopNode:
+    def __init__(self, token, operand):
+        self.op = token
+        self.operand = operand
+    def __repr__(self):
+        return f"({self.op}, {self.operand})"
+
+
 class IdNode:
     def __init__(self, token):
         self.token = token

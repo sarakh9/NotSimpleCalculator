@@ -1,5 +1,6 @@
 import math
-from nodes import NumberNode, BinopNode, AssignNode
+from tokens import TokenType
+from nodes import NumberNode, BinopNode, AssignNode, UnaryopNode, IdNode
 from errors import RunTimeError, Position
 from symbol_table import SymbolTable
 # from main import treee
@@ -7,8 +8,6 @@ from symbol_table import SymbolTable
 # Interpreter
 ################################################################################################################
 
-global_symbol_table = SymbolTable()
-global_symbol_table.set("null", 0)
 class RunTimeResult():
     def __init__(self) -> None:
         self.error = None
@@ -49,6 +48,26 @@ class Calculate:
             if operand.value == 0:
                 return None, RunTimeError(self.pos,"Division by zero")
             return Calculate(self.value / operand.value, self.pos), None
+    def less_than(self, operand):
+        if isinstance(operand, Calculate):
+            return Calculate(self.value < operand.value, self.pos), None
+    def less_equal(self, operand):
+        if isinstance(operand, Calculate):
+            return Calculate(self.value <= operand.value, self.pos), None
+    def great_than(self, operand):
+        if isinstance(operand, Calculate):
+            return Calculate(self.value > operand.value, self.pos), None
+    def great_equal(self, operand):
+        if isinstance(operand, Calculate):
+            return Calculate(self.value >= operand.value, self.pos), None
+    def equal(self, operand):
+        if isinstance(operand, Calculate):
+            return Calculate(self.value == operand.value, self.pos), None
+    def not_equal(self, operand):
+        if isinstance(operand, Calculate):
+            return Calculate(self.value != operand.value, self.pos), None
+    def not_(self):
+        return Calculate(not self.value, self.pos), None
     def __repr__(self):
         return str(self.value)
 
@@ -87,6 +106,28 @@ class Intrpreter:
                 result, error = left.div_by(right)
             case '^':
                 result, error = left.pow_by(right)
+            case '<':
+                result, error = left.less_than(right)
+            case '<=':
+                result, error = left.less_equal(right)
+            case '>':
+                result, error = left.great_than(right)
+            case '>=':
+                result, error = left.great_equal(right)
+            case '==':
+                result, error = left.equal(right)
+            case '!=':
+                result, error = left.not_equal(right)
+        if error: 
+            return rtr.fail(error)
+        return rtr.succes(result)
+    
+    def visit_UnaryopNode(self, node):
+        rtr = RunTimeResult()
+        left = rtr.register(self.visit(node.operand))
+        if rtr.error : return rtr
+        if node.op.type == TokenType.NOT:
+            result, error = left.not_()
         if error: 
             return rtr.fail(error)
         return rtr.succes(result)
