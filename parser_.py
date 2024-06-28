@@ -162,6 +162,8 @@ class Parser:
         
     def for_expr(self):
         res = ParseResult()
+        if self.current_token.type != TokenType.FOR:
+            return res.fail(InvalidSyntaxError(self.pos, "expected 'for'"))
         res.register(self.advance())
         if self.current_token.type == TokenType.IDENTIFIER:
             var_name = res.register(self.id())
@@ -194,6 +196,64 @@ class Parser:
                     return res.fail(InvalidSyntaxError(self.pos, "expected 'to'"))
             else:
                 return res.fail(InvalidSyntaxError(self.pos, "expected 'of'"))
+        else:
+            return res.fail(InvalidSyntaxError(self.pos, "expected variable"))
+        
+    def while_expr(self):
+        res = ParseResult()
+        if self.current_token.type != TokenType.WHILE:
+            return res.fail(InvalidSyntaxError(self.pos, "expected 'while'"))
+        res.register(self.advance())
+        condition = res.register(self.comparison())
+        if res.error: return res
+        if self.current_token.type == TokenType.DO:
+            res.register(self.advance())
+            if self.current_token.type == TokenType.BEGIN:
+                res.register(self.advance())
+                while self.current_token.type != TokenType.END:
+                    body = res.register(self.stmts())
+                    if res.error: return res
+                if self.current_token.type == TokenType.END:
+                    res.register(self.advance())
+                    return res.succes(WhileNode(condition, body))
+                else:
+                    return res.fail(InvalidSyntaxError(self.pos, "expected 'end'"))
+            else:
+                return res.fail(InvalidSyntaxError(self.pos, "expected 'begin'"))
+        else:
+            return res.fail(InvalidSyntaxError(self.pos, "expected 'do'"))
+        
+    def loop_expr(self):
+        res = ParseResult()
+        if self.current_token.type != TokenType.LOOP:
+            return res.fail(InvalidSyntaxError(self.pos, "expected 'loop'"))
+        res.register(self.advance())
+        if self.current_token.type == TokenType.IDENTIFIER:
+            var_name = res.register(self.id())
+            # res.register(self.advance())
+            if res.error: return res
+            if self.current_token.type == TokenType.COLON:
+                res.register(self.advance())
+                count = res.register(self.expr())
+                if res.error: return res
+                if self.current_token.type == TokenType.DO:
+                    res.register(self.advance())
+                    if self.current_token.type == TokenType.BEGIN:
+                        res.register(self.advance())
+                        while self.current_token.type != TokenType.END:
+                            body = res.register(self.stmt())
+                            if res.error: return res
+                        if self.current_token.type == TokenType.END:
+                            res.register(self.advance())
+                            return res.succes(LoopNode(var_name, count, body))
+                        else:
+                            return res.fail(InvalidSyntaxError(self.pos, "expected 'end'"))
+                    else:
+                        return res.fail(InvalidSyntaxError(self.pos, "expected 'begin'"))
+                else:
+                    return res.fail(InvalidSyntaxError(self.pos, "expected 'do'"))
+            else:
+                return res.fail(InvalidSyntaxError(self.pos, "expected ':'"))
         else:
             return res.fail(InvalidSyntaxError(self.pos, "expected variable"))
 
@@ -270,16 +330,9 @@ class Parser:
             return res.succes(if_expr)
         # WHILE LOOP
         elif self.current_token.type == TokenType.WHILE:
-            res.register(self.advance())
-            condition = res.register(self.comparison())
+            while_expr =  res.register(self.while_expr())
             if res.error: return res
-            if self.current_token.type == TokenType.DO:
-                res.register(self.advance())
-                body = res.register(self.stmts())
-                if res.error: return res
-                return res.succes(WhileNode(condition, body))
-            else:
-                return res.fail(InvalidSyntaxError(self.pos, "expected 'do'"))
+            return res.succes(while_expr)
         # FOR LOOP
         elif self.current_token.type == TokenType.FOR:
             for_expr =  res.register(self.for_expr())
@@ -287,25 +340,9 @@ class Parser:
             return res.succes(for_expr)
         # LOOP
         elif self.current_token.type == TokenType.LOOP:
-            res.register(self.advance())
-            if self.current_token.type == TokenType.IDENTIFIER:
-                var_name = res.register(self.id())
-                if res.error: return res
-                if self.current_token.type == TokenType.COLON:
-                    res.register(self.advance())
-                    count = res.register(self.expr())
-                    if res.error: return res
-                    if self.current_token.type == TokenType.DO:
-                        res.register(self.advance())
-                        body = res.register(self.stmt())
-                        if res.error: return res
-                        return res.succes(LoopNode(var_name, count, body))
-                    else:
-                        return res.fail(InvalidSyntaxError(self.pos, "expected 'do'"))
-                else:
-                    return res.fail(InvalidSyntaxError(self.pos, "expected ':'"))
-            else:
-                return res.fail(InvalidSyntaxError(self.pos, "expected variable name"))
+            loop_expr =  res.register(self.loop_expr())
+            if res.error: return res
+            return res.succes(loop_expr)
         # PRINT
         elif self.current_token.type == TokenType.PRINT:
             res.register(self.advance())

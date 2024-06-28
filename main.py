@@ -1,6 +1,6 @@
 # Testin and Running Interpreter
 
-from lexer import Lexer, IllegalCharacterError
+from lexer import Lexer
 from parser_ import Parser
 from interpreter import Interpreter
 
@@ -38,7 +38,7 @@ while True:
         res = interpreter.visit(tree.node)
     
     if res == None:
-        print("?run succes!")
+        print("run succes!")
         print_symbol_table(interpreter.symbol_table)
     else:
         try:

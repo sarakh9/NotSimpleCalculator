@@ -197,36 +197,28 @@ class Interpreter:
             return rtr.fail(RunTimeError(self.pos, f" if statement is not correct"))
         return rtr.succes(result)
 
-    # def visit_WhileNode(self, node):
-    #     rtr = RunTimeResult()
-    #     while rtr.register(self.visit(node.condition)):
-    #         result = rtr.register(self.visit(node.body))
-    #         if rtr.error : return rtr
-    #         if result: return rtr.succes(result)
-    #     return rtr.fail(RunTimeError(self.pos, f" while statement is not correct"))
-
-    # def visit_WhileNode(self, node):
-    #     rtr = RunTimeResult()
-    #     result = None
+    def visit_WhileNode(self, node):
+        rtr = RunTimeResult()
+        result = None
         
-    #     while True:
-    #         condition = rtr.register(self.visit(node.condition))
-    #         if rtr.error: return rtr
-    #         if not condition.value:
-    #             break
+        while True:
+            condition = rtr.register(self.visit(node.condition))
+            if rtr.error: return rtr
+            if not condition.value:
+                break
             
-    #         result = rtr.register(self.visit(node.body))
-    #         if rtr.error: return rtr
+            result = rtr.register(self.visit(node.body))
+            if rtr.error: return rtr
         
-    #     return rtr.succes(result)
+        return rtr.succes(result)
 
     def visit_ForNode(self, node):
         rtr = RunTimeResult()
-        result = None  # Initialize the result variable
+        result = None  
         start_value = rtr.register(self.visit(node.start_value))
         if rtr.error: return rtr
         end_value = rtr.register(self.visit(node.end_value))
-        if rtr.error: return rtr
+        if rtr.error: return
         if start_value.value <= end_value.value:
             range_values = range(start_value.value, end_value.value + 1)
         else:
@@ -238,16 +230,15 @@ class Interpreter:
         return rtr.succes(result)
 
 
-    # def visit_LoopNode(self, node):
-    #     rtr = RunTimeResult()
-    #     loop_count =rtr.register(self.visit(node.count))
-    #     if rtr.error : return rtr
-    #     for i in range(1, loop_count.value + 1):
-    #         self.symbol_table[node.var_name.token] = Calculate(i, self.pos)
-    #         result = rtr.register(self.visit(node.body))
-    #         if rtr.error : return rtr
-    #         if result: return rtr.succes(result)
-    #     return rtr.fail(RunTimeError(self.pos, f" loop statement is not correct"))
+    def visit_LoopNode(self, node):
+        rtr = RunTimeResult()
+        loop_count =rtr.register(self.visit(node.count))
+        if rtr.error : return rtr
+        for i in range(1, loop_count.value + 1):
+            self.symbol_table.set(node.var_name.token.value,Calculate(i, self.pos))
+            result = rtr.register(self.visit(node.body))
+            if rtr.error : return rtr
+            if result: return rtr.succes(result)
 
     def visit_PrintNode(self, node):
         rtr = RunTimeResult()
@@ -265,7 +256,6 @@ class Interpreter:
                 print(identifier_value.value)
                 return None
             else:
-                # print("undefined")
                 return None
         return None
     
