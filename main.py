@@ -34,18 +34,20 @@ while True:
         break
     else:
         print(f"parse tree: {tree.node}")
-    #     interpreter = Interpreter("testing.sk")
-    #     res = interpreter.visit(tree.node)
+        interpreter = Interpreter("testing.sk")
+        res = interpreter.visit(tree.node)
     
-    # if res == None:
-    #     print("res is none!")
-    #     print_symbol_table(interpreter.symbol_table)
-    #     print("?run succes!")
-    # else:
-    #     if res.error: 
-    #         print(res.error.as_string())
-    #         break
-    #     print(f">>> {res}")
-    #     print_symbol_table(interpreter.symbol_table)
-    #     print("run succes!")
+    if res == None:
+        print("?run succes!")
+        print_symbol_table(interpreter.symbol_table)
+    else:
+        try:
+            if res.error: 
+                print(res.error.as_string())
+                break
+        except AttributeError:
+            print("run succes!")
+        print(f">>> {res}")
+        print_symbol_table(interpreter.symbol_table)
+        
         

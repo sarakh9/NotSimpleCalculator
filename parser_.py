@@ -41,6 +41,7 @@ class Parser:
     def parse(self):
         tree = self.program()
         if not tree.error and self.current_token.type != TokenType.EOF:
+            print(f"cc in pars is: {self.current_token.type}")
             return tree.fail(InvalidSyntaxError(self.pos, "expected binary operation"))
         return tree
     
@@ -74,7 +75,7 @@ class Parser:
             return res.succes(id)
         elif tok.type == TokenType.OPAREN:
             res.register(self.advance())
-            expr = res.register(self.expr())
+            expr = res.register(self.comparison())
             if res.error: return res
             if self.current_token.type == TokenType.CPAREN:
                 res.register(self.advance())
@@ -82,7 +83,8 @@ class Parser:
             else:
                 return res.fail(InvalidSyntaxError(self.pos,"expected cparen"))
         else:
-            return res.fail(InvalidSyntaxError(self.pos, "expected int or float."))
+            print(f"cc in error is: {self.current_token.type}")
+            return res.fail(InvalidSyntaxError(self.pos, "expected int or float"))
 
     def factor(self):
         res = ParseResult()
@@ -121,6 +123,80 @@ class Parser:
             left = BinopNode(op_tok, left, right)
         return res.succes(left)
     
+    def if_expr(self):
+        res = ParseResult()
+        if self.current_token.type != TokenType.IF:
+            return res.fail(InvalidSyntaxError(self.pos, "expected 'if'"))
+        res.register(self.advance())
+        condition = res.register(self.comparison())
+        if res.error: return res
+        if self.current_token.type == TokenType.THEN:
+            res.register(self.advance())
+            if self.current_token.type != TokenType.BEGIN:
+                true_statement = res.register(self.stmt())
+                if res.error: return res
+                false_statement = None
+                if self.current_token.type == TokenType.ELSE:
+                    res.register(self.advance())
+                    false_statement = res.register(self.stmt())
+                    if res.error: return res
+            if self.current_token.type == TokenType.BEGIN:
+                res.register(self.advance())
+                while self.current_token.type != TokenType.END:
+                    true_statement = res.register(self.stmt())
+                    if res.error: return res
+                    false_statement = None
+                    if self.current_token.type == TokenType.ELSE:
+                        res.register(self.advance())
+                        false_statement = res.register(self.stmt())
+                        if res.error: return res
+                if self.current_token.type == TokenType.END:
+                    res.register(self.advance())
+                    return res.succes(IfNode(condition, true_statement, false_statement))
+                else:
+                    return res.fail(InvalidSyntaxError(self.pos, "expected 'end'"))
+            else:
+                return res.fail(InvalidSyntaxError(self.pos, "expected 'begin'"))
+        else:
+            return res.fail(InvalidSyntaxError(self.pos, "expected 'then'"))
+        
+    def for_expr(self):
+        res = ParseResult()
+        res.register(self.advance())
+        if self.current_token.type == TokenType.IDENTIFIER:
+            var_name = res.register(self.id())
+            if res.error: return res
+            if self.current_token.type == TokenType.OF:
+                res.register(self.advance())
+                start_value = res.register(self.expr())
+                if res.error: return res
+                if self.current_token.type == TokenType.TO:
+                    res.register(self.advance())
+                    end_value = res.register(self.expr())
+                    if res.error: return res
+                    if self.current_token.type == TokenType.DO:
+                        res.register(self.advance())
+                        if self.current_token.type == TokenType.BEGIN:
+                            while self.current_token.type != TokenType.END:
+                                res.register(self.advance())
+                                body = res.register(self.stmts())
+                                if res.error: return res
+                            if self.current_token.type == TokenType.END:
+                                res.register(self.advance())
+                                return res.succes(ForNode(var_name, start_value, end_value, body))
+                            else:
+                                return res.fail(InvalidSyntaxError(self.pos, "expected 'end'"))
+                        else:
+                            return res.fail(InvalidSyntaxError(self.pos, "expected 'begin'"))
+                    else:
+                        return res.fail(InvalidSyntaxError(self.pos, "expected 'do'"))
+                else:
+                    return res.fail(InvalidSyntaxError(self.pos, "expected 'to'"))
+            else:
+                return res.fail(InvalidSyntaxError(self.pos, "expected 'of'"))
+        else:
+            return res.fail(InvalidSyntaxError(self.pos, "expected variable"))
+
     def comparison(self):
         res = ParseResult()
         valid_op = ["<", ">", "<=", ">=", "==", "!="]
@@ -138,32 +214,18 @@ class Parser:
             right = res.register(self.expr())
             if res.error: return res
             left = BinopNode(op_tok, left, right)
-        return res.succes(left)
-                    
-    def if_expr(self):
-        res = ParseResult()
-        if self.current_token.type != TokenType.IF:
-            return res.fail(InvalidSyntaxError(self.pos, "expected 'if'"))
-        res.register(self.advance())
-        condition = res.register(self.comparison())
-        if res.error: return res
-        if self.current_token.type == TokenType.THEN:
-            res.register(self.advance())
-            true_statement = res.register(self.stmt())
-            if res.error: return res
-            false_statement = None
-            if self.current_token.type == TokenType.ELSE:
-                res.register(self.advance())
-                false_statement = res.register(self.stmt())
-                if res.error: return res
-            return res.succes(IfNode(condition, true_statement, false_statement))
-        else:
-            return res.fail(InvalidSyntaxError(self.pos, "expected 'then'"))
+        return res.succes(left)                  
 
     def stmt(self):
         res = ParseResult()
+        # NOT !EXPRESSION
+        if self.current_token.type == TokenType.NOT:
+            tok = self.current_token
+            res.register(self.advance())
+            op = res.register(self.comparison())
+            return res.succes(UnaryopNode(tok, op))
         # "STRING LITERAL"
-        if self.current_token.type == TokenType.STRINGLITERAL:
+        elif self.current_token.type == TokenType.STRINGLITERAL:
             str = res.register(self.stringLiteral())
             if self.current_token.type == TokenType.SEMICOLON:
                 res.register(self.advance())
@@ -206,6 +268,7 @@ class Parser:
             if_expr =  res.register(self.if_expr())
             if res.error: return res
             return res.succes(if_expr)
+        # WHILE LOOP
         elif self.current_token.type == TokenType.WHILE:
             res.register(self.advance())
             condition = res.register(self.comparison())
@@ -217,32 +280,12 @@ class Parser:
                 return res.succes(WhileNode(condition, body))
             else:
                 return res.fail(InvalidSyntaxError(self.pos, "expected 'do'"))
+        # FOR LOOP
         elif self.current_token.type == TokenType.FOR:
-            res.register(self.advance())
-            if self.current_token.type == TokenType.IDENTIFIER:
-                var_name = res.register(self.id())
-                if res.error: return res
-                if self.current_token.type == TokenType.OF:
-                    res.register(self.advance())
-                    start_value = res.register(self.expr())
-                    if res.error: return res
-                    if self.current_token.type == TokenType.TO:
-                        res.register(self.advance())
-                        end_value = res.register(self.expr())
-                        if res.error: return res
-                        if self.current_token.type == TokenType.DO:
-                            res.register(self.advance())
-                            body = res.register(self.stmts())
-                            if res.error: return res
-                            return res.succes(ForNode(var_name, start_value, end_value, body))
-                        else:
-                            return res.fail(InvalidSyntaxError(self.pos, "expected 'do'"))
-                    else:
-                        return res.fail(InvalidSyntaxError(self.pos, "expected 'to'"))
-                else:
-                    return res.fail(InvalidSyntaxError(self.pos, "expected 'of'"))
-            else:
-                return res.fail(InvalidSyntaxError(self.pos, "expected variable name"))
+            for_expr =  res.register(self.for_expr())
+            if res.error: return res
+            return res.succes(for_expr)
+        # LOOP
         elif self.current_token.type == TokenType.LOOP:
             res.register(self.advance())
             if self.current_token.type == TokenType.IDENTIFIER:
@@ -263,6 +306,7 @@ class Parser:
                     return res.fail(InvalidSyntaxError(self.pos, "expected ':'"))
             else:
                 return res.fail(InvalidSyntaxError(self.pos, "expected variable name"))
+        # PRINT
         elif self.current_token.type == TokenType.PRINT:
             res.register(self.advance())
             if self.current_token.type == TokenType.IDENTIFIER:
@@ -294,6 +338,7 @@ class Parser:
                 return res.fail(InvalidSyntaxError(self.pos, "expected variable or string literal"))
         elif self.current_token.type == TokenType.ASSIGN:
             return res.fail(InvalidSyntaxError(self.pos, "expected variable name or keyword"))
+        # STATEMENT := COMPARISON
         else :
             left = res.register(self.comparison())
             if res.error: return res

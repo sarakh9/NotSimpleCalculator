@@ -183,19 +183,19 @@ class Interpreter:
         self.symbol_table.set(node.left_child.token.value, value)
         return rtr.succes(value)
     
-    # def visit_IfNode(self, node):
-    #     rtr = RunTimeResult()
-    #     condition = rtr.register(self.visit(node.condition))
-    #     if rtr.error: return rtr
-    #     if condition.value:
-    #         result =  rtr.register(self.visit(node.true_body))
-    #     elif node.false_body:
-    #         result =  rtr.register(self.visit(node.false_body))
-    #     elif not (condition.value and node.false_body):
-    #         return False
-    #     else :
-    #         return rtr.fail(RunTimeError(self.pos, f" if statement is not correct"))
-    #     return rtr.succes(result)
+    def visit_IfNode(self, node):
+        rtr = RunTimeResult()
+        condition = rtr.register(self.visit(node.condition))
+        if rtr.error: return rtr
+        if condition.value:
+            result =  rtr.register(self.visit(node.true_body))
+        elif node.false_body:
+            result =  rtr.register(self.visit(node.false_body))
+        elif not (condition.value and node.false_body):
+            return False
+        else :
+            return rtr.fail(RunTimeError(self.pos, f" if statement is not correct"))
+        return rtr.succes(result)
 
     # def visit_WhileNode(self, node):
     #     rtr = RunTimeResult()
@@ -220,25 +220,22 @@ class Interpreter:
         
     #     return rtr.succes(result)
 
-    # def visit_ForNode(self, node):
-    #     rtr = RunTimeResult()
-    #     result = None  # Initialize the result variable
-    #     start_value = rtr.register(self.visit(node.start_value))
-    #     if rtr.error: return rtr
-    #     end_value = rtr.register(self.visit(node.end_value))
-    #     if rtr.error: return rtr
-
-    #     if start_value.value <= end_value.value:
-    #         range_values = range(start_value.value, end_value.value + 1)
-    #     else:
-    #         range_values = range(start_value.value, end_value.value - 1, -1)
-
-    #     for i in range_values:
-    #         self.symbol_table.set(node.var_name.token.value, Calculate(i, self.pos))
-    #         result = rtr.register(self.visit(node.body))
-    #         if rtr.error: return rtr
-
-    #     return rtr.succes(result)
+    def visit_ForNode(self, node):
+        rtr = RunTimeResult()
+        result = None  # Initialize the result variable
+        start_value = rtr.register(self.visit(node.start_value))
+        if rtr.error: return rtr
+        end_value = rtr.register(self.visit(node.end_value))
+        if rtr.error: return rtr
+        if start_value.value <= end_value.value:
+            range_values = range(start_value.value, end_value.value + 1)
+        else:
+            range_values = range(start_value.value, end_value.value - 1, -1)
+        for i in range_values:
+            self.symbol_table.set(node.var_name.token.value, Calculate(i, self.pos))
+            result = rtr.register(self.visit(node.body))
+            if rtr.error: return rtr
+        return rtr.succes(result)
 
 
     # def visit_LoopNode(self, node):
