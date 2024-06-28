@@ -11,13 +11,6 @@ def print_symbol_table(symbol_table):
     for name, value in symbol_table.symbols.items():
         print(f"{name}: {value}")
 
-def treee(tree):
-    if type(tree).__name__ == "NumberNode":
-        return tree.token.value
-    elif type(tree).__name__ == "BinopNode":
-        res = f"[{treee(tree.left_child)}<-({tree.op.value})->{treee(tree.right_child)}]"
-        print(res)
-        return res
 
 while True:
     try:
@@ -41,20 +34,18 @@ while True:
         break
     else:
         print(f"parse tree: {tree.node}")
-        interpreter = Interpreter("testing.sk")
-        res = interpreter.visit(tree.node)
-        # print(f"main res: {res}")
-    # if res != None:
-    #     if res.value.error:
+    #     interpreter = Interpreter("testing.sk")
+    #     res = interpreter.visit(tree.node)
+    
+    # if res == None:
+    #     print("res is none!")
+    #     print_symbol_table(interpreter.symbol_table)
+    #     print("?run succes!")
+    # else:
+    #     if res.error: 
     #         print(res.error.as_string())
     #         break
-    # else:
-    
-    if res == None:
-        print_symbol_table(interpreter.symbol_table)
-        print("?run succes!")
-    else:
-        print(f">>> {res.value}")
-        print_symbol_table(interpreter.symbol_table)
-        print("run succes!")
+    #     print(f">>> {res}")
+    #     print_symbol_table(interpreter.symbol_table)
+    #     print("run succes!")
         

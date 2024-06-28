@@ -1,8 +1,8 @@
 from tokens import TokenType
-from nodes import NumberNode, BinopNode, IdNode, AssignNode, UnaryopNode, IfNode, WhileNode, ForNode, LoopNode, PrintNode, StatementsNode, ProgramNode
+from nodes import NumberNode, BinopNode, IdNode, AssignNode, UnaryopNode, IfNode, WhileNode, ForNode, LoopNode, PrintNode, StatementsNode, ProgramNode, StringNode
 from errors import Position, InvalidSyntaxError
 class ParseResult():
-    def __init__(self) -> None:
+    def __init__(self):
         self.error = None
         self.node = None
     
@@ -43,6 +43,24 @@ class Parser:
         if not tree.error and self.current_token.type != TokenType.EOF:
             return tree.fail(InvalidSyntaxError(self.pos, "expected binary operation"))
         return tree
+    
+    def id(self):
+        res = ParseResult()
+        tok = self.current_token
+        if tok.type == TokenType.IDENTIFIER:
+            res.register(self.advance())
+            return res.succes(IdNode(tok))
+        else:
+            return res.fail(InvalidSyntaxError(self.pos, "invalid variable name"))
+    
+    def stringLiteral(self):
+        res = ParseResult()
+        tok = self.current_token
+        if tok.type == TokenType.STRINGLITERAL:
+            res.register(self.advance())
+            return res.succes(StringNode(tok))
+        else:
+            return res.fail(InvalidSyntaxError(self.pos, "invalid string"))
 
     def power(self):
         res = ParseResult()
@@ -103,15 +121,6 @@ class Parser:
             left = BinopNode(op_tok, left, right)
         return res.succes(left)
     
-    def id(self):
-        res = ParseResult()
-        tok = self.current_token
-        if tok.type == TokenType.IDENTIFIER:
-            res.register(self.advance())
-            return res.succes(IdNode(tok))
-        else:
-            return res.fail(InvalidSyntaxError(self.pos, "invalid variable name"))
-    
     def comparison(self):
         res = ParseResult()
         valid_op = ["<", ">", "<=", ">=", "==", "!="]
@@ -138,9 +147,6 @@ class Parser:
         res.register(self.advance())
         condition = res.register(self.comparison())
         if res.error: return res
-        while self.current_token.type == TokenType.IDENTIFIER or self.current_token.type == TokenType.BINOP or self.current_token.type == TokenType.NUMBER:
-            condition = res.register(self.comparison())
-            if res.error: return res
         if self.current_token.type == TokenType.THEN:
             res.register(self.advance())
             true_statement = res.register(self.stmt())
@@ -156,21 +162,36 @@ class Parser:
 
     def stmt(self):
         res = ParseResult()
-        if self.current_token.type == TokenType.IDENTIFIER:
+        # "STRING LITERAL"
+        if self.current_token.type == TokenType.STRINGLITERAL:
+            str = res.register(self.stringLiteral())
+            if self.current_token.type == TokenType.SEMICOLON:
+                res.register(self.advance())
+                return res.succes(str)
+            else:
+                return res.fail(InvalidSyntaxError(self.pos, "expected ';'"))
+        # IDENTIFIER = EXPRESSION OR STRING LITERAL
+        elif self.current_token.type == TokenType.IDENTIFIER:
             left = res.register(self.id())
             if res.error: return res
             if self.current_token.type == TokenType.ASSIGN:
                 tok = self.current_token
                 res.register(self.advance())
-                right = res.register(self.comparison())
-                if res.error: return res
+                if self.current_token.type == TokenType.STRINGLITERAL:
+                    right = res.register(self.stringLiteral())
+                    if res.error: return res
+                elif self.current_token.type == TokenType.NUMBER or self.current_token.type == TokenType.IDENTIFIER:
+                    right = res.register(self.comparison())
+                    if res.error: return res
                 if self.current_token.type == TokenType.SEMICOLON:
                     res.register(self.advance())
                     return res.succes(AssignNode(tok, left, right))
                 else:
+                    print(f"this is where it needs ; cc is: {self.current_token.type}")
                     return res.fail(InvalidSyntaxError(self.pos, "expected ';' after assignment"))
             else:
                 return res.fail(InvalidSyntaxError(self.pos, "expected assign operator '='"))
+        # BEGIN ..... END
         elif self.current_token.type == TokenType.BEGIN:
             res.register(self.advance())
             statements = res.register(self.stmts())
@@ -180,17 +201,18 @@ class Parser:
                 return res.succes(statements)
             else:
                 return res.fail(InvalidSyntaxError(self.pos, "expected 'end'"))
+        # IF STATEMENT
         elif self.current_token.type == TokenType.IF:
             if_expr =  res.register(self.if_expr())
             if res.error: return res
             return res.succes(if_expr)
         elif self.current_token.type == TokenType.WHILE:
             res.register(self.advance())
-            condition = res.register(self.expr())
+            condition = res.register(self.comparison())
             if res.error: return res
             if self.current_token.type == TokenType.DO:
                 res.register(self.advance())
-                body = res.register(self.stmt())
+                body = res.register(self.stmts())
                 if res.error: return res
                 return res.succes(WhileNode(condition, body))
             else:
@@ -210,7 +232,7 @@ class Parser:
                         if res.error: return res
                         if self.current_token.type == TokenType.DO:
                             res.register(self.advance())
-                            body = res.register(self.stmt())
+                            body = res.register(self.stmts())
                             if res.error: return res
                             return res.succes(ForNode(var_name, start_value, end_value, body))
                         else:
@@ -265,11 +287,11 @@ class Parser:
                         else:
                             return res.fail(InvalidSyntaxError(self.pos, "expected ';'"))
                     else:
-                        return res.fail(InvalidSyntaxError(self.pos, "expected variable name"))
+                        return res.fail(InvalidSyntaxError(self.pos, "expected variable"))
                 else:
                     return res.fail(InvalidSyntaxError(self.pos, "expected ','"))
             else:
-                return res.fail(InvalidSyntaxError(self.pos, "expected variable name or string literal"))
+                return res.fail(InvalidSyntaxError(self.pos, "expected variable or string literal"))
         elif self.current_token.type == TokenType.ASSIGN:
             return res.fail(InvalidSyntaxError(self.pos, "expected variable name or keyword"))
         else :
@@ -280,6 +302,7 @@ class Parser:
                 return res.succes(left)
             else:
                 return res.fail(InvalidSyntaxError(self.pos, "expected ';'"))
+            
     def stmts(self):
         res = ParseResult()
         statements = []
@@ -292,8 +315,6 @@ class Parser:
     def program(self):
         res = ParseResult()
         stmts = res.register(self.stmts())
-        g = res.succes(ProgramNode(stmts))
-        return g
-
+        return res.succes(ProgramNode(stmts))
 
 

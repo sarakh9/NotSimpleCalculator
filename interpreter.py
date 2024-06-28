@@ -11,6 +11,7 @@ class RunTimeResult():
     def __init__(self) -> None:
         self.error = None
         self.value = None
+        self.list_of_results = []
     
     def register(self, result):
         if isinstance(result, RunTimeResult):
@@ -77,9 +78,13 @@ class Interpreter:
         self.symbol_table = SymbolTable()
 
     def visit(self, node):
+        rtr = RunTimeResult()
         method_name = f'visit_{type(node).__name__}'
         method = getattr(self, method_name, self.no_visit)
-        return method(node)
+        m = method(node)
+        if isinstance(m, Calculate):
+            rtr.list_of_results.append(m)
+        return m
     
     def no_visit(self, node):
         raise Exception(f"No method visit_{type(node).__name__} found!")
@@ -96,27 +101,60 @@ class Interpreter:
         if rtr.error : return rtr
         match node.op.value:
             case '+':
-                result, error =  left.add_to(right)
+                try:
+                    result, error =  left.add_to(right)
+                except Exception:
+                    return rtr.fail(RunTimeError(self.pos, f"atleast one of the entries is not a number!"))
             case '-':
-                result, error = left.sub_by(right)
+                try:
+                    result, error = left.sub_by(right)
+                except Exception:
+                    return rtr.fail(RunTimeError(self.pos, f"atleast one of the entries is not a number!"))
             case '*':
-                result, error = left.mult_by(right)
+                try:
+                    result, error = left.mult_by(right)
+                except Exception:
+                    return rtr.fail(RunTimeError(self.pos, f"atleast one of the entries is not a number!"))
             case '/':
-                result, error = left.div_by(right)
+                try:
+                    result, error = left.div_by(right)
+                except Exception:
+                    return rtr.fail(RunTimeError(self.pos, f"atleast one of the entries is not a number!"))
             case '^':
-                result, error = left.pow_by(right)
+                try:
+                    result, error = left.pow_by(right)
+                except Exception:
+                    return rtr.fail(RunTimeError(self.pos, f"atleast one of the entries is not a number!"))
             case '<':
-                result, error = left.less_than(right)
+                try:
+                    result, error = left.less_than(right)
+                except Exception:
+                    return rtr.fail(RunTimeError(self.pos, f"atleast one of the entries is not a number!"))
             case '<=':
-                result, error = left.less_equal(right)
+                try:
+                    result, error = left.less_equal(right)
+                except Exception:
+                    return rtr.fail(RunTimeError(self.pos, f"atleast one of the entries is not a number!"))
             case '>':
-                result, error = left.great_than(right)
+                try:
+                    result, error = left.great_than(right)
+                except Exception:
+                    return rtr.fail(RunTimeError(self.pos, f"atleast one of the entries is not a number!"))
             case '>=':
-                result, error = left.great_equal(right)
+                try:
+                    result, error = left.great_equal(right)
+                except Exception:
+                    return rtr.fail(RunTimeError(self.pos, f"atleast one of the entries is not a number!"))
             case '==':
-                result, error = left.equal(right)
+                try:
+                    result, error = left.equal(right)
+                except Exception:
+                    return rtr.fail(RunTimeError(self.pos, f"atleast one of the entries is not a number!"))
             case '!=':
-                result, error = left.not_equal(right)
+                try:
+                    result, error = left.not_equal(right)
+                except Exception:
+                    return rtr.fail(RunTimeError(self.pos, f"atleast one of the entries is not a number!"))
         if error: 
             return rtr.fail(error)
         return rtr.succes(result)
@@ -135,7 +173,7 @@ class Interpreter:
         rtr = RunTimeResult()
         value = self.symbol_table.get(node.token.value)
         if value is None:
-            return rtr.fail(RunTimeError(node.token.pos, f"'{node.token.value}' is not defined"))
+            return rtr.fail(RunTimeError(self.pos, f"'{node.token.value}' is not defined"))
         return rtr.succes(value)
     
     def visit_AssignNode(self, node):
@@ -145,54 +183,77 @@ class Interpreter:
         self.symbol_table.set(node.left_child.token.value, value)
         return rtr.succes(value)
     
-    def visit_IfNode(self, node):
-        rtr = RunTimeResult()
-        condition = rtr.register(self.visit(node.condition))
-        if rtr.error: return rtr
-        if condition.value:
-            result =  rtr.register(self.visit(node.true_body))
-        elif node.false_body:
-            result =  rtr.register(self.visit(node.false_body))
-        elif not (condition.value and node.false_body):
-            return False
-        else :
-            return rtr.fail(RunTimeError(self.pos, f" if statement is not correct"))
-        return rtr.succes(result)
+    # def visit_IfNode(self, node):
+    #     rtr = RunTimeResult()
+    #     condition = rtr.register(self.visit(node.condition))
+    #     if rtr.error: return rtr
+    #     if condition.value:
+    #         result =  rtr.register(self.visit(node.true_body))
+    #     elif node.false_body:
+    #         result =  rtr.register(self.visit(node.false_body))
+    #     elif not (condition.value and node.false_body):
+    #         return False
+    #     else :
+    #         return rtr.fail(RunTimeError(self.pos, f" if statement is not correct"))
+    #     return rtr.succes(result)
 
-    def visit_WhileNode(self, node):
-        rtr = RunTimeResult()
-        while rtr.register(self.visit(node.condition)):
-            result = rtr.register(self.visit(node.body))
-            if rtr.error : return rtr
-            if result: return rtr.succes(result)
-        return rtr.fail(RunTimeError(self.pos, f" while statement is not correct"))
+    # def visit_WhileNode(self, node):
+    #     rtr = RunTimeResult()
+    #     while rtr.register(self.visit(node.condition)):
+    #         result = rtr.register(self.visit(node.body))
+    #         if rtr.error : return rtr
+    #         if result: return rtr.succes(result)
+    #     return rtr.fail(RunTimeError(self.pos, f" while statement is not correct"))
 
-    def visit_ForNode(self, node):
-        rtr = RunTimeResult()
-        start_value = rtr.register(self.visit(node.start_value))
-        if rtr.error : return rtr
-        end_value = rtr.register(self.visit(node.end_value))
-        if rtr.error : return rtr
-        for i in range(start_value.value, end_value.value + 1):
-            self.symbol_table.set(node.var_name.token.value, Calculate(i, self.pos))
-            result = rtr.register(self.visit(node.body))
-            if rtr.error : return rtr
-        return rtr.succes(result)
+    # def visit_WhileNode(self, node):
+    #     rtr = RunTimeResult()
+    #     result = None
+        
+    #     while True:
+    #         condition = rtr.register(self.visit(node.condition))
+    #         if rtr.error: return rtr
+    #         if not condition.value:
+    #             break
+            
+    #         result = rtr.register(self.visit(node.body))
+    #         if rtr.error: return rtr
+        
+    #     return rtr.succes(result)
 
-    def visit_LoopNode(self, node):
-        rtr = RunTimeResult()
-        loop_count =rtr.register(self.visit(node.loop_count))
-        if rtr.error : return rtr
-        for i in range(1, loop_count.value + 1):
-            self.symbol_table[node.var_name.value] = Calculate(i, node.var_name.token.pos)
-            result = rtr.register(self.visit(node.body))
-            if rtr.error : return rtr
-            if result: return rtr.succes(result)
-        return rtr.fail(RunTimeError(self.pos, f" loop statement is not correct"))
+    # def visit_ForNode(self, node):
+    #     rtr = RunTimeResult()
+    #     result = None  # Initialize the result variable
+    #     start_value = rtr.register(self.visit(node.start_value))
+    #     if rtr.error: return rtr
+    #     end_value = rtr.register(self.visit(node.end_value))
+    #     if rtr.error: return rtr
+
+    #     if start_value.value <= end_value.value:
+    #         range_values = range(start_value.value, end_value.value + 1)
+    #     else:
+    #         range_values = range(start_value.value, end_value.value - 1, -1)
+
+    #     for i in range_values:
+    #         self.symbol_table.set(node.var_name.token.value, Calculate(i, self.pos))
+    #         result = rtr.register(self.visit(node.body))
+    #         if rtr.error: return rtr
+
+    #     return rtr.succes(result)
+
+
+    # def visit_LoopNode(self, node):
+    #     rtr = RunTimeResult()
+    #     loop_count =rtr.register(self.visit(node.count))
+    #     if rtr.error : return rtr
+    #     for i in range(1, loop_count.value + 1):
+    #         self.symbol_table[node.var_name.token] = Calculate(i, self.pos)
+    #         result = rtr.register(self.visit(node.body))
+    #         if rtr.error : return rtr
+    #         if result: return rtr.succes(result)
+    #     return rtr.fail(RunTimeError(self.pos, f" loop statement is not correct"))
 
     def visit_PrintNode(self, node):
         rtr = RunTimeResult()
-        
         if node.value and node.identifier:
             identifier_value = self.symbol_table.get(node.identifier.token.value)
             if identifier_value:
@@ -213,6 +274,7 @@ class Interpreter:
     
     def visit_StringNode(self, node):
         rtr = RunTimeResult()
+        return rtr.succes(Calculate(node.value, self.pos).value.value)
     
     def visit_StatementsNode(self, node):
         rtr = RunTimeResult()
