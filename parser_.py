@@ -260,12 +260,6 @@ class Parser:
     def comparison(self):
         res = ParseResult()
         valid_op = ["<", ">", "<=", ">=", "==", "!="]
-        if self.current_token == '!':
-            op_tok = self.current_token
-            res.register(self.advance())
-            left = res.register(self.comparison())
-            if res.error: return res
-            return res.succes(UnaryopNode(op_tok, left))
         left = res.register(self.expr())
         if res.error: return res
         while self.current_token.value in valid_op:
@@ -283,7 +277,11 @@ class Parser:
             tok = self.current_token
             res.register(self.advance())
             op = res.register(self.comparison())
-            return res.succes(UnaryopNode(tok, op))
+            if self.current_token.type == TokenType.SEMICOLON:
+                res.register(self.advance())
+                return res.succes(UnaryopNode(tok, op))
+            else:
+                return res.fail(InvalidSyntaxError(self.pos, "expected ';'"))
         # "STRING LITERAL"
         elif self.current_token.type == TokenType.STRINGLITERAL:
             str = res.register(self.stringLiteral())

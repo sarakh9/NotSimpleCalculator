@@ -1,0 +1,32 @@
+statements := statement statements | statement
+
+statement := identifier = comparison;
+            | begin statements end
+            | if comparison then statement
+            | if comparison then statement else statement
+            | while comparison do statement
+            | for identifier of number to number do statement
+            | loop identifier : number do statement
+            | print identifier;
+            | print stringLiteral , identifier;
+            | stringLiteral;
+            | ! comparison;
+
+comparison :=  identifier binop("<"| ">"| "<="| ">="| "=="| "!=") identifier
+            |  number binop("<"| ">"| "<="| ">="| "=="| "!=") number
+            |  expression
+
+expression := term + term;
+            | term - term;
+            | term;
+
+term       := factor * factor
+            | factor / factor
+            |factor
+
+factor     := power ^ power
+            | power
+
+power      := number
+            | identifier
+            | (comparison)
